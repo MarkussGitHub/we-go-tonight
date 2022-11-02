@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "we-go-tonight"
+version = "0.1.0"
+description = ""
+authors = ["Markuss <juhnevskis.markuss@gmail.com>"]
+readme = "README.md"
+packages = [{include = "we_go_tonight"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+python-telegram-bot = "^13.14"
+pyyaml = "^6.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
