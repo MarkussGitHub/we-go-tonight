@@ -2,10 +2,20 @@
 
 import logging
 import yaml
-import json
 
-from telegram import Bot, Update, ForceReply, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, CallbackQueryHandler, ConversationHandler
+from telegram import (
+    InlineKeyboardButton, 
+    InlineKeyboardMarkup,
+    ReplyKeyboardRemove, 
+    Update,
+)
+from telegram.ext import (
+    CallbackContext, 
+    CallbackQueryHandler,
+    CommandHandler, 
+    ConversationHandler, 
+    Updater,
+)
 
 # Enable logging
 logging.basicConfig(
@@ -15,7 +25,7 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
-# Stages
+# States
 START_ROUTES, END_ROUTES = range(2)
 # Callback data
 event_type, help, Comedy, Culture, Food, Sports, Any = range(7)
@@ -27,101 +37,98 @@ def start(update: Update, context: CallbackContext) -> int:
     """Send message on `/start`."""
     # Get user that sent /start and log his name
     user = update.message.from_user
-    logger.info("User %s started the conversation.", user.first_name)
-    
+    logger.info(f"User {user.id} started the conversation.")
+
     keyboard = [
         [
             InlineKeyboardButton("Events", callback_data=str(event_type)),
             InlineKeyboardButton("Help", callback_data=str(help)),
         ]
     ]
-    
-    reply_markup = InlineKeyboardMarkup(keyboard)
+
     # Message for the inline keyboard
-    update.message.reply_text(text ="Feel free to choose an Event or press Help for the list of my commands!", reply_markup=reply_markup)
+    update.message.reply_text(
+        text="Feel free to choose an Event or press Help for the list of my commands!",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+    )
     # Tell ConversationHandler that we're in state `start` now
     return START_ROUTES
 
 
 def start_over(update: Update, context: CallbackContext) -> int:
     """Prompt same text & keyboard as `event_type` does but not as new message"""
-    query = update.callback_query
-    query.answer()
+    message = update.callback_query
+
     keyboard = [
         [
             InlineKeyboardButton("Comedy", callback_data=str(Comedy)),
-            InlineKeyboardButton("Culture", callback_data=str(Culture))
-            
+            InlineKeyboardButton("Culture", callback_data=str(Culture)),
         ],
         [
             InlineKeyboardButton("Food&Drinks", callback_data=str(Food)),
-            InlineKeyboardButton("Sports", callback_data=str(Sports))
+            InlineKeyboardButton("Sports", callback_data=str(Sports)),
         ],
-        [
-            InlineKeyboardButton("Any", callback_data=str(Any))
-        ]
+        [InlineKeyboardButton("Any", callback_data=str(Any))]
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    query.edit_message_text(
-        text="Hope you will like something else, I am glad to offer you other options ", reply_markup=reply_markup
+
+    message.edit_message_text(
+        text="Hope you will like something else, I am glad to offer you other options",
+        reply_markup=InlineKeyboardMarkup(keyboard),
     )
     return START_ROUTES
+
 
 def event_type(update: Update, context: CallbackContext) -> int:
     """Event type menu"""
-    query = update.callback_query
-    query.answer()
+    message = update.callback_query
+
     keyboard = [
         [
             InlineKeyboardButton("Comedy", callback_data=str(Comedy)),
-            InlineKeyboardButton("Culture", callback_data=str(Culture))
-            
+            InlineKeyboardButton("Culture", callback_data=str(Culture)),
         ],
         [
             InlineKeyboardButton("Food&Drinks", callback_data=str(Food)),
-            InlineKeyboardButton("Sports", callback_data=str(Sports))
+            InlineKeyboardButton("Sports", callback_data=str(Sports)),
         ],
-        [
-            InlineKeyboardButton("Any", callback_data=str(Any))
-        ]
+        [InlineKeyboardButton("Any", callback_data=str(Any))]
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    query.edit_message_text(
-        text="Here are the types of Events I can offer to you or you can choose Any if you are feeling adventurous ", reply_markup=reply_markup
+
+    message.edit_message_text(
+        text="Here are the types of Events I can offer to you or you can choose Any if you are feeling adventurous",
+        reply_markup=InlineKeyboardMarkup(keyboard),
     )
     return START_ROUTES
 
+
 def help(update: Update, context: CallbackContext) -> int:
     """Help with return to start"""
-    query = update.callback_query
-    query.answer()
-    keyboard = [
-        [
-            InlineKeyboardButton("Start", callback_data=str(event_type)),
-        ]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    query.edit_message_text(text="Hey, I am here to help, these are the commands you can write - ", reply_markup = reply_markup)
+    message = update.callback_query
+
+    keyboard = [[InlineKeyboardButton("Start", callback_data=str(event_type))]]
+    message.edit_message_text(
+        text="Hey, I am here to help, these are the commands you can write - ",
+        reply_markup = InlineKeyboardMarkup(keyboard)
+    )
     return START_ROUTES
 
 
 def comedy(update: Update, context: CallbackContext) -> int:
     """Comedy option from types"""
-    query = update.callback_query
-    query.answer()
+    message = update.callback_query
+
     keyboard = [
         [
             InlineKeyboardButton("Event Menu", callback_data=str(event_type)),
             # Recursive to loop through options of Comedy
             InlineKeyboardButton("Next", callback_data=str(Comedy)),
         ],
-        [
-            InlineKeyboardButton("Cancel", callback_data=str(help))
-        ]
+        [InlineKeyboardButton("Cancel", callback_data=str(help))]
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    query.edit_message_text(
-        text = "JSON file subkey Comedy here", reply_markup=reply_markup
+
+    message.edit_message_text(
+        text = "JSON file subkey Comedy here", 
+        reply_markup=InlineKeyboardMarkup(keyboard),
     )
     
     # End routes both require start and end of all actions, therefore 2 event_type actions needed
@@ -130,81 +137,80 @@ def comedy(update: Update, context: CallbackContext) -> int:
 
 def culture(update: Update, context: CallbackContext) -> int:
     """Culture option from types"""
-    query = update.callback_query
-    query.answer()
+    message = update.callback_query
+
     keyboard = [
         [
             InlineKeyboardButton("Event Menu", callback_data=str(event_type)),
             # Recursive to loop through options of Culture
             InlineKeyboardButton("Next", callback_data=str(Culture))
         ],
-        [
-            InlineKeyboardButton("Cancel", callback_data=str(help)),
-        ]
+        [InlineKeyboardButton("Cancel", callback_data=str(help))]
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    query.edit_message_text(
-        text="Markuss izvadi JSON te", reply_markup=reply_markup
+
+    message.edit_message_text(
+        text="Markuss izvadi JSON te",
+        reply_markup=InlineKeyboardMarkup(keyboard),
     )
     return END_ROUTES
 
+
 def food(update: Update, context: CallbackContext) -> int:
     """Food&Drinks option from types"""
-    query = update.callback_query
-    query.answer()
+    message = update.callback_query
+
     keyboard = [
         [
             InlineKeyboardButton("Event Menu", callback_data=str(event_type)),
             # Recursive to loop through options of Food
             InlineKeyboardButton("Next", callback_data=str(Food))
         ],
-        [
-            InlineKeyboardButton("Cancel", callback_data=str(help)),
-        ]
+        [InlineKeyboardButton("Cancel", callback_data=str(help))]
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    query.edit_message_text(
-        text="Markuss izvadi JSON te", reply_markup=reply_markup
+
+    message.edit_message_text(
+        text="Markuss izvadi JSON te", 
+        reply_markup=InlineKeyboardMarkup(keyboard),
     )
     return END_ROUTES
 
+
 def sports(update: Update, context: CallbackContext) -> int:
     """Sports option from types"""
-    query = update.callback_query
-    query.answer()
+    message = update.callback_query
+
     keyboard = [
         [
             InlineKeyboardButton("Event Menu", callback_data=str(event_type)),
             # Recursive to loop through options of Sports
             InlineKeyboardButton("Next", callback_data=str(Sports))
         ],
-        [
-            InlineKeyboardButton("Cancel", callback_data=str(help)),
-        ]
+        [InlineKeyboardButton("Cancel", callback_data=str(help))]
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    query.edit_message_text(
-        text="Markuss izvadi JSON te", reply_markup=reply_markup
+
+    message.edit_message_text(
+        text="Markuss izvadi JSON te", 
+        reply_markup=InlineKeyboardMarkup(keyboard),
     )
     return END_ROUTES    
 
+
 def any(update: Update, context: CallbackContext) -> int:
     """Any option from types"""
-    query = update.callback_query
-    query.answer()
+    message = update.callback_query
+
     keyboard = [
         [
             InlineKeyboardButton("Event menu", callback_data=str(event_type)),
             # Recursive to loop through options of Any
             InlineKeyboardButton("Next", callback_data=str(Any)),
         ],
-        [
-            InlineKeyboardButton("Cancel", callback_data=str(help))
-        ]
+        [InlineKeyboardButton("Cancel", callback_data=str(help))]
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    query.edit_message_text(
-        text="Markuss izvadi JSON te", reply_markup=reply_markup
+
+    message.edit_message_text(
+        text="Markuss izvadi JSON te", 
+        reply_markup=InlineKeyboardMarkup(keyboard),
     )
     return END_ROUTES
     
@@ -213,18 +219,19 @@ def any(update: Update, context: CallbackContext) -> int:
 
 
 def end(update: Update, context: CallbackContext) -> int:
-    """Returns `ConversationHandler.END`, which tells the
+    """
+    Returns `ConversationHandler.END`, which tells the
     ConversationHandler that the conversation is over.
     Made for the second optiion of completely setting off the bot by pressing cancel
-    called at the end of every type of event""" 
-    query = update.callback_query
-    query.answer()
-    query.edit_message_text(text="Cheers! I hope you will use our services again")
+    called at the end of every type of event
+    """
+    message = update.callback_query
+    message.edit_message_text(text="Cheers! I hope you will use our services again")
     return ConversationHandler.END
+
 
 def help_command(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /help is issued."""
-    message = update.message
     update.message.reply_markdown(
         text=fr"We have the following commands in order - !",
         reply_markup=ReplyKeyboardRemove(),
