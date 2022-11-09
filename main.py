@@ -4,7 +4,7 @@ import logging
 import yaml
 
 from telegram import Update, ForceReply
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+from telegram.ext import Updater, CommandHandler, CallbackContext
 
 # Enable logging
 logging.basicConfig(

@@ -1,0 +1,361 @@
+{
+  "last_updated": "2022-11-06 14:55:10",
+  "events": {
+    "Culture": [
+      {
+        "event_type": "Culture",
+        "event_name": "Restaurant",
+        "event_desc": "this is the other random text for the company",
+        "event_Image_URL": "https://i.postimg.cc/nrBv3K4y/hockey.jpg",
+        "start_date": "31/12/2022",
+        "end_date": "31/12/2022",
+        "booking_availability": "TRUE",
+        "availability_left": "",
+        "contact_telegram": "@comedy",
+        "contact_number": "23214551"
+      },
+      {
+        "event_type": "Culture",
+        "event_name": "Restaurant",
+        "event_desc": "nummero three random text for the company",
+        "event_Image_URL": "https://i.postimg.cc/QtBgTZHx/20161113-002209-1464191232-7b07jpg.jpg",
+        "start_date": "31/12/2022",
+        "end_date": "5/1/2023",
+        "booking_availability": "FALSE",
+        "availability_left": "-",
+        "contact_telegram": "@hockey",
+        "contact_number": "27049907"
+      },
+      {
+        "event_type": "Culture",
+        "event_name": "Restaurant",
+        "event_desc": "this is the other random text for the company",
+        "event_Image_URL": "https://i.postimg.cc/d1z2RNyR/2021-03-23-Merois-008-30.jpg",
+        "start_date": "31/12/2022",
+        "end_date": "1/1/2023",
+        "booking_availability": "FALSE",
+        "availability_left": "-",
+        "contact_telegram": "@comedy",
+        "contact_number": "23214551"
+      },
+      {
+        "event_type": "Culture",
+        "event_name": "Hockey game",
+        "event_desc": "this is the other random text for the company",
+        "event_Image_URL": "https://i.postimg.cc/d1z2RNyR/2021-03-23-Merois-008-30.jpg",
+        "start_date": "31/12/2022",
+        "end_date": "5/1/2023",
+        "booking_availability": "TRUE",
+        "availability_left": "",
+        "contact_telegram": "@hookah",
+        "contact_number": "22544598"
+      },
+      {
+        "event_type": "Culture",
+        "event_name": "Hockey game",
+        "event_desc": "nummero three random text for the company",
+        "event_Image_URL": "https://i.postimg.cc/nrBv3K4y/hockey.jpg",
+        "start_date": "14/11/2022",
+        "end_date": "14/11/2022",
+        "booking_availability": "FALSE",
+        "availability_left": "-",
+        "contact_telegram": "@comedy",
+        "contact_number": "27049907"
+      }
+    ],
+    "Comedy": [
+      {
+        "event_type": "Comedy",
+        "event_name": "SIA Albert",
+        "event_desc": "this is the other random text for the company",
+        "event_Image_URL": "https://i.postimg.cc/R0pQhZCD/unnamed.png",
+        "start_date": "31/12/2022",
+        "end_date": "31/12/2022",
+        "booking_availability": "TRUE",
+        "availability_left": "",
+        "contact_telegram": "@hockey",
+        "contact_number": "27049907"
+      },
+      {
+        "event_type": "Comedy",
+        "event_name": "SIA Albert",
+        "event_desc": "random text for a company",
+        "event_Image_URL": "https://i.postimg.cc/nrBv3K4y/hockey.jpg",
+        "start_date": "31/12/2022",
+        "end_date": "5/1/2023",
+        "booking_availability": "TRUE",
+        "availability_left": "",
+        "contact_telegram": "@hookah",
+        "contact_number": "22544598"
+      },
+      {
+        "event_type": "Comedy",
+        "event_name": "Hookah Lounge",
+        "event_desc": "random text for a company",
+        "event_Image_URL": "https://i.postimg.cc/QtBgTZHx/20161113-002209-1464191232-7b07jpg.jpg",
+        "start_date": "31/12/2022",
+        "end_date": "5/1/2023",
+        "booking_availability": "FALSE",
+        "availability_left": "-",
+        "contact_telegram": "@hockey",
+        "contact_number": "27049907"
+      },
+      {
+        "event_type": "Comedy",
+        "event_name": "Hookah Lounge",
+        "event_desc": "nummero three random text for the company",
+        "event_Image_URL": "https://i.postimg.cc/R0pQhZCD/unnamed.png",
+        "start_date": "14/11/2022",
+        "end_date": "14/11/2022",
+        "booking_availability": "FALSE",
+        "availability_left": "-",
+        "contact_telegram": "@hockey",
+        "contact_number": "22544598"
+      },
+      {
+        "event_type": "Comedy",
+        "event_name": "Hockey game",
+        "event_desc": "random text for a company",
+        "event_Image_URL": "https://i.postimg.cc/QtBgTZHx/20161113-002209-1464191232-7b07jpg.jpg",
+        "start_date": "14/11/2022",
+        "end_date": "4/12/2022",
+        "booking_availability": "FALSE",
+        "availability_left": "-",
+        "contact_telegram": "@restaurant",
+        "contact_number": "27049907"
+      },
+      {
+        "event_type": "Comedy",
+        "event_name": "Hookah Lounge",
+        "event_desc": "this is the other random text for the company",
+        "event_Image_URL": "https://i.postimg.cc/d1z2RNyR/2021-03-23-Merois-008-30.jpg",
+        "start_date": "14/11/2022",
+        "end_date": "15/11/2022",
+        "booking_availability": "FALSE",
+        "availability_left": "-",
+        "contact_telegram": "@hockey",
+        "contact_number": "22544598"
+      },
+      {
+        "event_type": "Comedy",
+        "event_name": "Hookah Lounge",
+        "event_desc": "random text for a company",
+        "event_Image_URL": "https://i.postimg.cc/R0pQhZCD/unnamed.png",
+        "start_date": "14/11/2022",
+        "end_date": "15/11/2022",
+        "booking_availability": "TRUE",
+        "availability_left": "",
+        "contact_telegram": "@hockey",
+        "contact_number": "27049907"
+      },
+      {
+        "event_type": "Comedy",
+        "event_name": "Restaurant",
+        "event_desc": "this is the other random text for the company",
+        "event_Image_URL": "https://i.postimg.cc/d1z2RNyR/2021-03-23-Merois-008-30.jpg",
+        "start_date": "14/11/2022",
+        "end_date": "15/11/2022",
+        "booking_availability": "FALSE",
+        "availability_left": "-",
+        "contact_telegram": "@comedy",
+        "contact_number": "22544598"
+      },
+      {
+        "event_type": "Comedy",
+        "event_name": "Hockey game",
+        "event_desc": "nummero three random text for the company",
+        "event_Image_URL": "https://i.postimg.cc/R0pQhZCD/unnamed.png",
+        "start_date": "14/11/2022",
+        "end_date": "15/11/2022",
+        "booking_availability": "FALSE",
+        "availability_left": "-",
+        "contact_telegram": "@hockey",
+        "contact_number": "23214551"
+      }
+    ],
+    "Sport": [
+      {
+        "event_type": "Sport",
+        "event_name": "SIA Albert",
+        "event_desc": "this is the other random text for the company",
+        "event_Image_URL": "https://i.postimg.cc/QtBgTZHx/20161113-002209-1464191232-7b07jpg.jpg",
+        "start_date": "24/07/2022",
+        "end_date": "24/07/2022",
+        "booking_availability": "FALSE",
+        "availability_left": "-",
+        "contact_telegram": "@comedy",
+        "contact_number": "22544598"
+      },
+      {
+        "event_type": "Sport",
+        "event_name": "Hookah Lounge",
+        "event_desc": "random text for a company",
+        "event_Image_URL": "https://i.postimg.cc/d1z2RNyR/2021-03-23-Merois-008-30.jpg",
+        "start_date": "24/07/2022",
+        "end_date": "13/08/2022",
+        "booking_availability": "TRUE",
+        "availability_left": "",
+        "contact_telegram": "@comedy",
+        "contact_number": "22544598"
+      },
+      {
+        "event_type": "Sport",
+        "event_name": "Restaurant",
+        "event_desc": "nummero three random text for the company",
+        "event_Image_URL": "https://i.postimg.cc/d1z2RNyR/2021-03-23-Merois-008-30.jpg",
+        "start_date": "31/12/2022",
+        "end_date": "1/1/2023",
+        "booking_availability": "FALSE",
+        "availability_left": "-",
+        "contact_telegram": "@hookah",
+        "contact_number": "22544598"
+      },
+      {
+        "event_type": "Sport",
+        "event_name": "Restaurant",
+        "event_desc": "nummero three random text for the company",
+        "event_Image_URL": "https://i.postimg.cc/R0pQhZCD/unnamed.png",
+        "start_date": "24/07/2022",
+        "end_date": "25/07/2022",
+        "booking_availability": "FALSE",
+        "availability_left": "-",
+        "contact_telegram": "@restaurant",
+        "contact_number": "22544598"
+      },
+      {
+        "event_type": "Sport",
+        "event_name": "Hockey game",
+        "event_desc": "nummero three random text for the company",
+        "event_Image_URL": "https://i.postimg.cc/QtBgTZHx/20161113-002209-1464191232-7b07jpg.jpg",
+        "start_date": "14/11/2022",
+        "end_date": "19/11/2022",
+        "booking_availability": "FALSE",
+        "availability_left": "-",
+        "contact_telegram": "@hookah",
+        "contact_number": "22544598"
+      },
+      {
+        "event_type": "Sport",
+        "event_name": "Hookah Lounge",
+        "event_desc": "this is the other random text for the company",
+        "event_Image_URL": "https://i.postimg.cc/R0pQhZCD/unnamed.png",
+        "start_date": "31/12/2022",
+        "end_date": "5/1/2023",
+        "booking_availability": "FALSE",
+        "availability_left": "-",
+        "contact_telegram": "@restaurant",
+        "contact_number": "23214551"
+      },
+      {
+        "event_type": "Sport",
+        "event_name": "Hockey game",
+        "event_desc": "random text for a company",
+        "event_Image_URL": "https://i.postimg.cc/QtBgTZHx/20161113-002209-1464191232-7b07jpg.jpg",
+        "start_date": "14/11/2022",
+        "end_date": "15/11/2022",
+        "booking_availability": "TRUE",
+        "availability_left": "",
+        "contact_telegram": "@hockey",
+        "contact_number": "22544598"
+      }
+    ],
+    "Any": [
+      {
+        "event_type": "Any",
+        "event_name": "SIA Albert",
+        "event_desc": "random text for a company",
+        "event_Image_URL": "https://i.postimg.cc/nrBv3K4y/hockey.jpg",
+        "start_date": "31/12/2022",
+        "end_date": "1/1/2023",
+        "booking_availability": "TRUE",
+        "availability_left": "",
+        "contact_telegram": "@hookah",
+        "contact_number": "23214551"
+      },
+      {
+        "event_type": "Any",
+        "event_name": "Restaurant",
+        "event_desc": "this is the other random text for the company",
+        "event_Image_URL": "https://i.postimg.cc/nrBv3K4y/hockey.jpg",
+        "start_date": "24/07/2022",
+        "end_date": "25/07/2022",
+        "booking_availability": "FALSE",
+        "availability_left": "-",
+        "contact_telegram": "@hookah",
+        "contact_number": "23214551"
+      },
+      {
+        "event_type": "Any",
+        "event_name": "Hockey game",
+        "event_desc": "this is the other random text for the company",
+        "event_Image_URL": "https://i.postimg.cc/QtBgTZHx/20161113-002209-1464191232-7b07jpg.jpg",
+        "start_date": "24/07/2022",
+        "end_date": "29/07/2022",
+        "booking_availability": "TRUE",
+        "availability_left": "",
+        "contact_telegram": "@hockey",
+        "contact_number": "27049907"
+      },
+      {
+        "event_type": "Any",
+        "event_name": "Hookah Lounge",
+        "event_desc": "random text for a company",
+        "event_Image_URL": "https://i.postimg.cc/R0pQhZCD/unnamed.png",
+        "start_date": "14/11/2022",
+        "end_date": "14/11/2022",
+        "booking_availability": "FALSE",
+        "availability_left": "-",
+        "contact_telegram": "@hookah",
+        "contact_number": "27049907"
+      },
+      {
+        "event_type": "Any",
+        "event_name": "Restaurant",
+        "event_desc": "random text for a company",
+        "event_Image_URL": "https://i.postimg.cc/d1z2RNyR/2021-03-23-Merois-008-30.jpg",
+        "start_date": "24/07/2022",
+        "end_date": "24/07/2022",
+        "booking_availability": "FALSE",
+        "availability_left": "-",
+        "contact_telegram": "@restaurant",
+        "contact_number": "23214551"
+      },
+      {
+        "event_type": "Any",
+        "event_name": "Restaurant",
+        "event_desc": "nummero three random text for the company",
+        "event_Image_URL": "https://i.postimg.cc/QtBgTZHx/20161113-002209-1464191232-7b07jpg.jpg",
+        "start_date": "31/12/2022",
+        "end_date": "1/1/2023",
+        "booking_availability": "TRUE",
+        "availability_left": "",
+        "contact_telegram": "@hookah",
+        "contact_number": "23214551"
+      },
+      {
+        "event_type": "Any",
+        "event_name": "Hookah Lounge",
+        "event_desc": "this is the other random text for the company",
+        "event_Image_URL": "https://i.postimg.cc/d1z2RNyR/2021-03-23-Merois-008-30.jpg",
+        "start_date": "24/07/2022",
+        "end_date": "25/07/2022",
+        "booking_availability": "FALSE",
+        "availability_left": "-",
+        "contact_telegram": "@hockey",
+        "contact_number": "23214551"
+      },
+      {
+        "event_type": "Any",
+        "event_name": "Restaurant",
+        "event_desc": "this is the other random text for the company",
+        "event_Image_URL": "https://i.postimg.cc/QtBgTZHx/20161113-002209-1464191232-7b07jpg.jpg",
+        "start_date": "14/11/2022",
+        "end_date": "14/11/2022",
+        "booking_availability": "FALSE",
+        "availability_left": "-",
+        "contact_telegram": "@restaurant",
+        "contact_number": "27049907"
+      }
+    ]
+  }
+}
