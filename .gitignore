@@ -130,3 +130,10 @@ dmypy.json
 
 # Local settings
 settings.local.yaml
+
+# Credentials
+credentials.json
+token.json
+
+# Data
+event_list.json
