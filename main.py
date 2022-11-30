@@ -9,6 +9,10 @@ from telegram import (
     InlineKeyboardMarkup,
     ReplyKeyboardRemove, 
     Update,
+    Chat, 
+    ChatMember,
+    Message,
+    Bot,
 )
 from telegram.ext import (
     CallbackContext, 
@@ -16,6 +20,9 @@ from telegram.ext import (
     CommandHandler, 
     ConversationHandler, 
     Updater,
+    ConversationHandler,
+    MessageHandler,
+    Filters,
 )
 from utils.sheets_to_json import save_event_list, extract_event_list
 
@@ -189,6 +196,53 @@ def help_command(update: Update, context: CallbackContext) -> None:
         reply_markup=ReplyKeyboardRemove(),
     )
 
+def pushadvert(update: Update, context: CallbackContext) -> None:
+    user = update.message.from_user
+    logger.info(f"User {user.id} wrote pushadvert.") 
+    update.message.reply_text(
+        text=(f"You started the pushadvert command, write an advertisment that can be posted in the group chat of WeGoTonight"),
+        reply_markup=ReplyKeyboardRemove(),
+    )
+    return "PUSH"
+
+def push(update: Update, context: CallbackContext) -> int:
+    logger.info("User sent an advert.", update.effective_chat.id)
+    update.message.reply_text(
+        text=(f"Sent for approval to the admin, if it is approved, it will be posted in the group."
+              f"If it is not approved, you will be notified"),
+        reply_markup= ReplyKeyboardRemove(),
+    )
+    ADMIN_id = 1699557868
+    update.message.bot.forward_message(ADMIN_id, update.effective_chat.id, update.message.message_id)
+    
+    user_data = context.user_data
+    id = update.effective_chat.id
+    category = user_data[update.effective_chat.id]
+    user_data[category] = id
+    
+    forward_data = context.user_data
+    category = forward_data[update.message.message_id]
+    forward_data[category] = update.message.message_id
+
+    return "PUSH_TO_GROUP"
+
+def push_to_group(update: Update, context: CallbackContext) -> int:
+    ADMIN_id = 1699557868
+    forward_data = context.user_data
+    user_data = context.user_data
+    if update.effective_chat.id == ADMIN_id:
+        update.message.reply_text(
+            text=(f"The message is sent to the group"),
+            reply_markup= ReplyKeyboardRemove(),
+        )
+        group_id = -1001535413676 
+        update.message.bot.forward_message(group_id, user_data, forward_data)
+    else:
+        update.message.reply_text(
+            text=(f"The message is not recognized ;("),
+            reply_markup= ReplyKeyboardRemove(),
+        )
+    return
 
 def main() -> None:
     """Start the bot."""
@@ -224,15 +278,37 @@ def main() -> None:
             ],
         },
         fallbacks=[CommandHandler("start", start)],
+        name="user_interactions",
     )
+    push_handler = ConversationHandler(
+        entry_points=[CommandHandler("pushadvert", pushadvert)],
+        states={
+            "PUSH": [
+                MessageHandler(
+                    Filters.text & ~(Filters.command | Filters.regex("^Done$")), push, pass_chat_data= True
+                ),
+            ],
+            "PUSH_TO_GROUP": [
+                MessageHandler(
+                    Filters.text & ~(Filters.command | Filters.regex("^Done$")), push_to_group
+                ),
+            ],        
+        },
+        fallbacks=[MessageHandler(Filters.regex("^Done$"),push)],
+        name="push_advert",
+    )
+
 
     # Add ConversationHandler to application that will be used for handling updates
     dispatcher.add_handler(conv_handler)
+    dispatcher.add_handler(push_handler)
+
     
     # on different commands - answer in Telegram
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help_command))
-    
+    dispatcher.add_handler(CommandHandler("pushadvert", pushadvert))   
+    dispatcher.add_handler(CommandHandler("approve", push_to_group)) 
     # Start the Bot
     updater.start_polling()
 
