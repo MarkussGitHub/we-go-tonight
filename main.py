@@ -3,18 +3,20 @@
 import logging
 import yaml
 import json
+import textwrap
 
 from telegram import (
-    InlineKeyboardButton, 
+    InlineKeyboardButton,
     InlineKeyboardMarkup,
-    ReplyKeyboardRemove, 
+    ReplyKeyboardRemove,
     Update,
+    ParseMode,
 )
 from telegram.ext import (
-    CallbackContext, 
+    CallbackContext,
     CallbackQueryHandler,
-    CommandHandler, 
-    ConversationHandler, 
+    CommandHandler,
+    ConversationHandler,
     Updater,
 )
 from utils.sheets_to_json import save_event_list, extract_event_list
@@ -32,13 +34,14 @@ logger = logging.getLogger(__name__)
 def start(update: Update, context: CallbackContext) -> int:
     """Send message on `/start`."""
     # Get user that sent /start and log his name
+    context.user_data["test"] = 123
     user = update.message.from_user
-    logger.info(f"User {user.id} started the conversation.")
+    logger.info(
+        f"{user.first_name}, started the conversation. User ID: {user.id}")
 
     keyboard = [
         [
             InlineKeyboardButton("Events", callback_data="event_type"),
-            InlineKeyboardButton("Help", callback_data="help"),
         ]
     ]
 
@@ -46,6 +49,8 @@ def start(update: Update, context: CallbackContext) -> int:
     update.message.reply_text(
         text="Feel free to choose an Event or press Help for the list of my commands!",
         reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode=ParseMode.MARKDOWN,
+        disable_web_page_preview=False
     )
     # Tell ConversationHandler that we're in state `start` now
     return "START_ROUTES"
@@ -108,64 +113,118 @@ def help(update: Update, context: CallbackContext) -> int:
 
     message.edit_message_text(
         text="Hey, I am here to help, these are the commands you can write - ",
-        reply_markup = InlineKeyboardMarkup(keyboard)
+        reply_markup=InlineKeyboardMarkup(keyboard)
     )
     return "START_ROUTES"
 
 
 def event_list(update: Update, context: CallbackContext) -> int:
     """Event list for selected type"""
-    
     message = update.callback_query
-    selected_event = message.data
+    selected_event_type = message.data
     message.answer()
-    if "|" not in selected_event:
+
+    if "|" not in selected_event_type:
         counter = 0
     else:
-        counter = int(selected_event.split("|")[1])
-        selected_event = selected_event.split("|")[0]
+        counter = int(selected_event_type.split("|")[1])
+        selected_event_type = selected_event_type.split("|")[0]
         counter = counter+1
 
     keyboard = [
+        [],
+        [],
         [
-            InlineKeyboardButton("Next", callback_data=f"{selected_event}|{counter}"),
+            InlineKeyboardButton("Event Menu", callback_data="event_type"),
+            InlineKeyboardButton("Cancel", callback_data="end"),
+        ]
+    ]
+
+    with open("data/event_list.json", "r") as f:
+        jzon = json.load(f)
+        event_group = jzon["events"][selected_event_type]
+
+    first_event = (
+        f'1️⃣ *{event_group[counter]["event_name"]}*\n\n'
+        f'Description:  {event_group[counter]["event_desc"]}\n'
+        f'Start Date:  {event_group[counter]["start_date"]}\n\n'
+    )
+    keyboard[0].append(InlineKeyboardButton("1️⃣", callback_data=f"details|{selected_event_type}|{counter}"))
+
+    if counter+1 <= len(event_group)-1:
+        second_event = (
+            f'2️⃣ *{event_group[counter+1]["event_name"]}*\n\n'
+            f'Description:  {event_group[counter+1]["event_desc"]}\n'
+            f'Start Date:  {event_group[counter+1]["start_date"]}\n\n'
+        )
+        keyboard[0].append(InlineKeyboardButton("2️⃣", callback_data=f"details|{selected_event_type}|{counter+1}"))
+    else:
+        second_event = ""
+
+    if counter+2 <= len(event_group)-1:
+        third_event = (
+            f'3️⃣ *{event_group[counter+2]["event_name"]}*\n\n'
+            f'Description:  {event_group[counter+2]["event_desc"]}\n'
+            f'Start Date:  {event_group[counter+2]["start_date"]}\n\n'
+        )
+        keyboard[0].append(InlineKeyboardButton("3️⃣", callback_data=f"details|{selected_event_type}|{counter+2}"))
+    else:
+        third_event = ""
+
+    events_to_display = first_event + second_event + third_event
+    events_array = [first_event, second_event, third_event]
+    last_in_list = events_array.index(max(events_array))
+
+    if counter != 0:
+        keyboard[1].append(InlineKeyboardButton("⬅️", callback_data=f"{selected_event_type}|{counter-4}"))
+
+    if counter+last_in_list != len(event_group)-1:
+        keyboard[1].append(InlineKeyboardButton("➡️", callback_data=f"{selected_event_type}|{counter+2}"))
+
+    message.edit_message_text(
+        text=(events_to_display),
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode=ParseMode.MARKDOWN,
+    )
+
+    return "END_ROUTES"
+
+
+def event_details(update: Update, context: CallbackContext) -> int:
+    message = update.callback_query
+    selected_event_type = message.data.split("|")[1]
+    counter = int(message.data.split("|")[2])
+    message.answer()
+
+    with open("data/event_list.json", "r") as f:
+        jzon = json.load(f)
+        selected_event = jzon["events"][selected_event_type][counter]
+    
+
+    keyboard = [
+        [
+            InlineKeyboardButton("Back", callback_data=f"{selected_event_type}"),
         ],
         [
             InlineKeyboardButton("Event Menu", callback_data="event_type"),
             InlineKeyboardButton("Cancel", callback_data="end"),
         ]
     ]
-    if counter != 0:
-        keyboard[0].insert(0, InlineKeyboardButton("Back", callback_data=f"{selected_event}"),)
 
-    with open("data/event_list.json", "r") as f:
-        jzon = json.load(f)
+    message.edit_message_text(
+        text=(
+            f'[​​​​​​​​​​​]({selected_event["event_Image_URL"]})\n\n'
+            f'*{selected_event["event_name"]}*\n\n'
+            f'Description:  {selected_event["event_desc"]}\n'
+            f'Start Date:  {selected_event["start_date"]}\n'
+            f'End Date:  {selected_event["end_date"]}\n'
+            f'Telegram: {selected_event["contact_telegram"]}\n'
+            f'Phone: {selected_event["contact_number"]}\n'
+        ),
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode=ParseMode.MARKDOWN,
+    )
 
-    try:
-        message.edit_message_text(
-            text = (
-                f'{jzon["events"][selected_event][counter]["event_name"]}\n\n'
-                f'Description:  {jzon["events"][selected_event][counter]["event_desc"]}\n'
-                f'Start Date:  {jzon["events"][selected_event][counter]["start_date"]}\n'
-                f'End Date:  {jzon["events"][selected_event][counter]["end_date"]}\n'
-                f'Telegram:  {jzon["events"][selected_event][counter]["contact_telegram"]}\n'
-                f'Phone:  {jzon["events"][selected_event][counter]["contact_number"]}\n'
-            ),
-            reply_markup=InlineKeyboardMarkup(keyboard)
-        )
-    except IndexError:
-        keyboard = [
-            [InlineKeyboardButton("Back", callback_data=f"{selected_event}")],
-            [
-                InlineKeyboardButton("Event Menu", callback_data="event_type"),
-                InlineKeyboardButton("Cancel", callback_data="end"),
-            ]
-        ]
-        message.edit_message_text(
-            text = "Sorry, there are no more events for this type",
-            reply_markup=InlineKeyboardMarkup(keyboard),
-        )
-    # End routes both require start and end of all actions, therefore 2 event_type actions needed
     return "END_ROUTES"
 
 
@@ -178,14 +237,15 @@ def end(update: Update, context: CallbackContext) -> int:
     """
     message = update.callback_query
     message.answer()
-    message.edit_message_text(text="Cheers! I hope you will use our services again")
+    message.edit_message_text(
+        text="Cheers! I hope you will use our services again")
     return ConversationHandler.END
 
 
 def help_command(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /help is issued."""
     update.message.reply_markdown(
-        text=fr"We have the following commands in order - !",
+        text=f"We have the following commands in order - !",
         reply_markup=ReplyKeyboardRemove(),
     )
 
@@ -202,13 +262,13 @@ def main() -> None:
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
-    
+
     # Setup conversation handler with the states START and END
     # Use the pattern parameter to pass CallbackQueries with specific
     # data pattern to the corresponding handlers.
     event_types = "Comedy|Culture|Food|Sports|Any"
-    event_typs_with_counter = f"{event_types}|[0-9]+"
-    
+    event_types_with_counter = f"{event_types}|[0-9]+"
+
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
@@ -218,7 +278,9 @@ def main() -> None:
                 CallbackQueryHandler(event_list, pattern="^" + event_types + "$"),
             ],
             "END_ROUTES": [
-                CallbackQueryHandler(event_list, pattern="^" + event_typs_with_counter + "$"),
+                CallbackQueryHandler(event_list, pattern="^" + event_types_with_counter + "$"),
+                CallbackQueryHandler(event_details, pattern="^details"),
+                # CallbackQueryHandler(view_photos, pattern="^view_photos"),
                 CallbackQueryHandler(start_over, pattern="^event_type$"),
                 CallbackQueryHandler(end, pattern="^end$"),
             ],
@@ -228,11 +290,11 @@ def main() -> None:
 
     # Add ConversationHandler to application that will be used for handling updates
     dispatcher.add_handler(conv_handler)
-    
+
     # on different commands - answer in Telegram
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help_command))
-    
+
     # Start the Bot
     updater.start_polling()
 
@@ -240,7 +302,6 @@ def main() -> None:
     # SIGTERM or SIGABRT. This should be used most of the time, since
     # start_polling() is non-blocking and will stop the bot gracefully.
     updater.idle()
-
 
 
 if __name__ == '__main__':
