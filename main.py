@@ -202,7 +202,7 @@ def pushadvert(update: Update, context: CallbackContext) -> None:
     return "PUSH"
 
 def push(update: Update, context: CallbackContext) -> int:
-    logger.info("User sent an advert.", update.effective_chat.id)
+    logger.info(f"User sent an advert. {update.effective_chat.id}")
     update.message.reply_text(
         text=(f"Sent for approval to the admin, if it is approved, it will be posted in the group."
               f"If it is not approved, you will be notified"),
@@ -224,7 +224,7 @@ def push_to_group(update: Update, context: CallbackContext) -> int:
             text=(f"The message is sent to the group"),
             reply_markup= ReplyKeyboardRemove(),
         )
-        group_id = -1001535413676 
+        group_id = -1001535413676
         update.message.bot.copy_message(group_id,ADMIN_id, context.user_data["message_id"])
     else:
         update.message.reply_text(
@@ -279,9 +279,9 @@ def main() -> None:
             ],
             "PUSH_TO_GROUP": [
                 MessageHandler(
-                    Filters.text & ~(Filters.command | Filters.regex("^Done$")), push_to_group, pass_chat_data= True
+                    Filters.text & Filters.regex("^/approve$") & ~(Filters.command | Filters.regex("^Done$")), push_to_group, pass_chat_data= True
                 ),
-            ],        
+            ],
         },
         fallbacks=[MessageHandler(Filters.regex("^Done$"),push)],
         name="push_advert",
