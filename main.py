@@ -215,28 +215,21 @@ def push(update: Update, context: CallbackContext) -> int:
     ADMIN_id = 1699557868
     update.message.bot.forward_message(ADMIN_id, update.effective_chat.id, update.message.message_id)
     
-    user_data = context.user_data
-    id = update.effective_chat.id
-    category = user_data[update.effective_chat.id]
-    user_data[category] = id
+    context.user_data["chat_id"] = update.effective_chat.id
     
-    forward_data = context.user_data
-    category = forward_data[update.message.message_id]
-    forward_data[category] = update.message.message_id
-
+    context.user_data["message_id"] = update.message.message_id
+    
     return "PUSH_TO_GROUP"
 
 def push_to_group(update: Update, context: CallbackContext) -> int:
     ADMIN_id = 1699557868
-    forward_data = context.user_data
-    user_data = context.user_data
     if update.effective_chat.id == ADMIN_id:
         update.message.reply_text(
             text=(f"The message is sent to the group"),
             reply_markup= ReplyKeyboardRemove(),
         )
         group_id = -1001535413676 
-        update.message.bot.forward_message(group_id, user_data, forward_data)
+        update.message.bot.copy_message(group_id,ADMIN_id, context.user_data["message_id"])
     else:
         update.message.reply_text(
             text=(f"The message is not recognized ;("),
@@ -285,12 +278,12 @@ def main() -> None:
         states={
             "PUSH": [
                 MessageHandler(
-                    Filters.text & ~(Filters.command | Filters.regex("^Done$")), push, pass_chat_data= True
+                    Filters.photo & ~(Filters.command | Filters.regex("^Done$")), push, pass_chat_data= True
                 ),
             ],
             "PUSH_TO_GROUP": [
                 MessageHandler(
-                    Filters.text & ~(Filters.command | Filters.regex("^Done$")), push_to_group
+                    Filters.text & ~(Filters.command | Filters.regex("^Done$")), push_to_group, pass_chat_data= True
                 ),
             ],        
         },
