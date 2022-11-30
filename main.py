@@ -9,10 +9,6 @@ from telegram import (
     InlineKeyboardMarkup,
     ReplyKeyboardRemove, 
     Update,
-    Chat, 
-    ChatMember,
-    Message,
-    Bot,
 )
 from telegram.ext import (
     CallbackContext, 
