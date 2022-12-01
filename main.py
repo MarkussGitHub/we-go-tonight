@@ -3,7 +3,6 @@
 import logging
 import yaml
 import json
-import textwrap
 
 from telegram import (
     InlineKeyboardButton,
@@ -23,6 +22,11 @@ from telegram.ext import (
     Filters,
 )
 from utils.sheets_to_json import save_event_list, extract_event_list
+from utils.db_utils import DBManager
+
+
+with open("settings.local.yaml", "r") as f:
+    config = yaml.load(f, Loader=yaml.FullLoader)
 
 # Enable logging
 logging.basicConfig(
@@ -33,14 +37,22 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+host = config["DB_HOST"]
+dbname = config["DB_NAME"]
+user = config["DB_USER"]
+password = config["DB_PASSWORD"]
+
+db = DBManager(host, dbname, user, password)
+
 
 def start(update: Update, context: CallbackContext) -> int:
     """Send message on `/start`."""
     # Get user that sent /start and log his name
-    context.user_data["test"] = 123
     user = update.message.from_user
-    logger.info(
-        f"{user.first_name}, started the conversation. User ID: {user.id}")
+    referal = context.args[0] if context.args else None
+    logger.info(f"{user.first_name}, started the conversation. User ID: {user.id}")
+    if db.get_account(user.id) is None:
+        db.create_account(user, referal)
 
     keyboard = [
         [
@@ -65,15 +77,13 @@ def start_over(update: Update, context: CallbackContext) -> int:
     message.answer()
 
     keyboard = [
-        [
-            InlineKeyboardButton("Comedy", callback_data="Comedy"),
-            InlineKeyboardButton("Culture", callback_data="Culture"),
-        ],
-        [
-            InlineKeyboardButton("Food&Drinks", callback_data="Food"),
-            InlineKeyboardButton("Sports", callback_data="Sports"),
-        ],
-        [InlineKeyboardButton("Any", callback_data="Any")]
+        [InlineKeyboardButton("🎸 Concerts/Parties 🎉", callback_data="Comedy")],
+        [InlineKeyboardButton("⛩️ Culture 🗽", callback_data="Culture")],
+        [InlineKeyboardButton("🧩 Workshop 🛍️", callback_data="Food")],
+        [InlineKeyboardButton("🍱 Food/Drinks 🥂", callback_data="Food")],
+        [InlineKeyboardButton("🎨 Art/Literature 📚", callback_data="Sports")],
+        [InlineKeyboardButton("🎭 Theatre/Stand up 🎤", callback_data="Any")],
+        [InlineKeyboardButton("Any ⁉️", callback_data="Any")],
     ]
 
     message.edit_message_text(
@@ -89,15 +99,13 @@ def event_type(update: Update, context: CallbackContext) -> int:
     message.answer()
 
     keyboard = [
-        [
-            InlineKeyboardButton("Comedy", callback_data=f"Comedy"),
-            InlineKeyboardButton("Culture", callback_data="Culture"),
-        ],
-        [
-            InlineKeyboardButton("Food&Drinks", callback_data="Food"),
-            InlineKeyboardButton("Sports", callback_data="Sports"),
-        ],
-        [InlineKeyboardButton("Any", callback_data="Any")]
+        [InlineKeyboardButton("🎸 Concerts/Parties 🎉", callback_data="Comedy")],
+        [InlineKeyboardButton("⛩️ Culture 🗽", callback_data="Culture")],
+        [InlineKeyboardButton("🧩 Workshop 🛍️", callback_data="Food")],
+        [InlineKeyboardButton("🍱 Food/Drinks 🥂", callback_data="Food")],
+        [InlineKeyboardButton("🎨 Art/Literature 📚", callback_data="Sports")],
+        [InlineKeyboardButton("🎭 Theatre/Stand up 🎤", callback_data="Any")],
+        [InlineKeyboardButton("Any ⁉️", callback_data="Any")],
     ]
 
     message.edit_message_text(
@@ -252,6 +260,7 @@ def help_command(update: Update, context: CallbackContext) -> None:
         reply_markup=ReplyKeyboardRemove(),
     )
 
+
 def pushadvert(update: Update, context: CallbackContext) -> None:
     user = update.message.from_user
     logger.info(f"User {user.id} wrote pushadvert.") 
@@ -260,6 +269,7 @@ def pushadvert(update: Update, context: CallbackContext) -> None:
         reply_markup=ReplyKeyboardRemove(),
     )
     return "PUSH"
+
 
 def push(update: Update, context: CallbackContext) -> int:
     logger.info(f"User sent an advert. {update.effective_chat.id}")
@@ -271,11 +281,10 @@ def push(update: Update, context: CallbackContext) -> int:
     ADMIN_id = 1699557868
     update.message.bot.forward_message(ADMIN_id, update.effective_chat.id, update.message.message_id)
     
-    context.user_data["chat_id"] = update.effective_chat.id
-    
     context.user_data["message_id"] = update.message.message_id
     
     return "PUSH_TO_GROUP"
+
 
 def push_to_group(update: Update, context: CallbackContext) -> int:
     ADMIN_id = 1699557868
@@ -293,11 +302,10 @@ def push_to_group(update: Update, context: CallbackContext) -> int:
         )
     return
 
+
 def main() -> None:
     """Start the bot."""
     # Create the Updater and pass it your bot's token.
-    with open("settings.local.yaml", "r") as f:
-        config = yaml.load(f, Loader=yaml.FullLoader)
     updater = Updater(config["TOKEN"])
 
     event_list_data = extract_event_list()
