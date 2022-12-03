@@ -59,6 +59,7 @@ def start(update: Update, context: CallbackContext) -> int:
             InlineKeyboardButton("Events", callback_data="event_type"),
         ]
     ]
+    
 
     # Message for the inline keyboard
     update.message.reply_text(
@@ -263,7 +264,7 @@ def help_command(update: Update, context: CallbackContext) -> None:
 
 def pushadvert(update: Update, context: CallbackContext) -> None:
     user = update.message.from_user
-    logger.info(f"User {user.id} wrote pushadvert.") 
+    logger.info(f"User {user.id} wrote pushadvert.")
     update.message.reply_text(
         text=(f"You started the pushadvert command, write an advertisment that can be posted in the group chat of WeGoTonight"),
         reply_markup=ReplyKeyboardRemove(),
@@ -275,33 +276,59 @@ def push(update: Update, context: CallbackContext) -> int:
     logger.info(f"User sent an advert. {update.effective_chat.id}")
     update.message.reply_text(
         text=(f"Sent for approval to the admin, if it is approved, it will be posted in the group."
-              f"If it is not approved, you will be notified"),
+              f" If it is not approved, you will be notified"),
         reply_markup= ReplyKeyboardRemove(),
     )
     ADMIN_id = 1699557868
-    update.message.bot.forward_message(ADMIN_id, update.effective_chat.id, update.message.message_id)
-    
-    context.user_data["message_id"] = update.message.message_id
-    
+    data = db.get_account(update.effective_chat.id)
+    db.create_advert(update.message.message_id, data.get("id"))
+    update.message.bot.forward_message(
+        ADMIN_id,
+        update.effective_chat.id,
+        update.message.message_id
+    )
+    advert = (db.get_advert(data.get("id")))
+    update.message.bot.send_message(ADMIN_id, advert.get ("owner_id"))
+        
     return "PUSH_TO_GROUP"
 
-
-def push_to_group(update: Update, context: CallbackContext) -> int:
+def approval(update: Update, context: CallbackContext) -> int:
     ADMIN_id = 1699557868
     if update.effective_chat.id == ADMIN_id:
         update.message.reply_text(
-            text=(f"The message is sent to the group"),
-            reply_markup= ReplyKeyboardRemove(),
+                text=(f"Please write the id of the advert you're approving," 
+                      f"which is stated under the advert you want to approve"),
+                reply_markup= ReplyKeyboardRemove(),
         )
-        group_id = -1001535413676
-        update.message.bot.copy_message(group_id,ADMIN_id, context.user_data["message_id"])
     else:
         update.message.reply_text(
-            text=(f"The message is not recognized ;("),
-            reply_markup= ReplyKeyboardRemove(),
+                text=(f"There is no such command \U0001F972 " + 
+                      f"Please use /help to see what I can offer you"),
+                reply_markup= ReplyKeyboardRemove(),
         )
-    return
+        
+    return "PUSH_TO_GROUP"
 
+def push_to_group(update: Update, context: CallbackContext) -> int:
+    advert_owner_id = update.message.text
+    advert = db.get_advert(advert_owner_id)
+    advert_msg_id = advert.get("advert_msg_id")
+    advert_owner = db.get_account_by_owner_id(advert_owner_id)
+
+    update.message.bot.send_message(
+        advert_owner.get("telegram_user_id"), 
+        text=(f"Your advert has been posted to our group. " 
+              f"You're welcome!")
+    )
+    
+    group_id = -1001535413676
+    update.message.bot.copy_message(
+        group_id,
+        advert_owner.get("telegram_user_id"),
+        advert_msg_id
+    ) 
+    
+    db.delete_advert(advert.get("id"))
 
 def main() -> None:
     """Start the bot."""
@@ -340,16 +367,17 @@ def main() -> None:
         name="user_interactions",
     )
     push_handler = ConversationHandler(
-        entry_points=[CommandHandler("pushadvert", pushadvert)],
+        entry_points=[CommandHandler("pushadvert", pushadvert), CommandHandler("approve", approval)],
+                    
         states={
             "PUSH": [
                 MessageHandler(
-                    Filters.photo & ~(Filters.command | Filters.regex("^Done$")), push, pass_chat_data= True
+                    Filters.photo | Filters.text & ~(Filters.command | Filters.regex("^Done$")), push, pass_chat_data= True
                 ),
             ],
             "PUSH_TO_GROUP": [
                 MessageHandler(
-                    Filters.text & Filters.regex("^/approve$") & ~(Filters.command | Filters.regex("^Done$")), push_to_group, pass_chat_data= True
+                    Filters.photo | Filters.text & ~(Filters.command | Filters.regex("^Done$")), push_to_group, pass_chat_data= True
                 ),
             ],
         },
@@ -367,7 +395,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help_command))
     dispatcher.add_handler(CommandHandler("pushadvert", pushadvert))   
-    dispatcher.add_handler(CommandHandler("approve", push_to_group)) 
+    dispatcher.add_handler(CommandHandler("approve", approval)) 
     # Start the Bot
     updater.start_polling()
 
