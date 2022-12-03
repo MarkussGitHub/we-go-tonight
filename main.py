@@ -313,8 +313,8 @@ def push_to_group(update: Update, context: CallbackContext) -> int:
     advert_owner_id = update.message.text
     advert = db.get_advert(advert_owner_id)
     advert_msg_id = advert.get("advert_msg_id")
-    advert_owner = db.get_account_by_owner_id(advert_owner_id)
-
+    advert_owner = db.get_account_by_owner_id(advert.get("owner_id"))
+    print(advert_owner)
     update.message.bot.send_message(
         advert_owner.get("telegram_user_id"), 
         text=(f"Your advert has been posted to our group. " 
