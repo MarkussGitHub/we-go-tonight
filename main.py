@@ -3,6 +3,7 @@
 import logging
 import yaml
 import json
+from datetime import datetime, timedelta
 
 from telegram import (
     InlineKeyboardButton,
@@ -21,8 +22,9 @@ from telegram.ext import (
     MessageHandler,
     Filters,
 )
-from utils.sheets_to_json import save_event_list, extract_event_list
+from utils.sheet_utils import SheetManager
 from utils.db_utils import DBManager
+from utils.event_formatters import prepare_event_details
 
 
 with open("settings.local.yaml", "r") as f:
@@ -41,28 +43,38 @@ host = config["DB_HOST"]
 dbname = config["DB_NAME"]
 user = config["DB_USER"]
 password = config["DB_PASSWORD"]
+client_id = config["GOOGLE_CLIENT_ID"]
+client_secret = config["GOOGLE_CLIENT_SECRET"]
+
 
 db = DBManager(host, dbname, user, password)
+sheet = SheetManager(client_id, client_secret)
 
 
 def start(update: Update, context: CallbackContext) -> int:
     """Send message on `/start`."""
-    # Get user that sent /start and log his name
+    message_date = update.message.date.strftime("%Y-%m-%d %H:%M:%S")
+    current_date = datetime.utcnow()-timedelta(minutes=1)
+    current_date = current_date.strftime("%Y-%m-%d %H:%M:%S")
+    if message_date < current_date:
+        return
+
     user = update.message.from_user
-    referal = context.args[0] if context.args else None
     logger.info(f"{user.first_name}, started the conversation. User ID: {user.id}")
+
+    referal = context.args[0] if context.args else None
     if db.get_account(user.id) is None:
         db.create_account(user, referal)
 
     keyboard = [
-        [
-            InlineKeyboardButton("Events", callback_data="event_type"),
-        ]
+        [InlineKeyboardButton("Today", callback_data="today")],
+        [InlineKeyboardButton("This week", callback_data="week")],
+        [InlineKeyboardButton("This month", callback_data="month")],
     ]
 
     # Message for the inline keyboard
     update.message.reply_text(
-        text="Feel free to choose an Event or press Help for the list of my commands!",
+        text="When would you like to go?",
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode=ParseMode.MARKDOWN,
         disable_web_page_preview=False
@@ -77,11 +89,11 @@ def start_over(update: Update, context: CallbackContext) -> int:
     message.answer()
 
     keyboard = [
-        [InlineKeyboardButton("🎸 Concerts/Parties 🎉", callback_data="Comedy")],
+        [InlineKeyboardButton("🎸 Concerts/Parties 🎉", callback_data="Music/Party")],
         [InlineKeyboardButton("⛩️ Culture 🗽", callback_data="Culture")],
-        [InlineKeyboardButton("🧩 Workshop 🛍️", callback_data="Food")],
+        [InlineKeyboardButton("🧩 Workshop 🛍️", callback_data="Workshop")],
         [InlineKeyboardButton("🍱 Food/Drinks 🥂", callback_data="Food")],
-        [InlineKeyboardButton("🎨 Art/Literature 📚", callback_data="Sports")],
+        [InlineKeyboardButton("🎨 Art/Literature 📚", callback_data="Stand Up")],
         [InlineKeyboardButton("🎭 Theatre/Stand up 🎤", callback_data="Any")],
         [InlineKeyboardButton("Any ⁉️", callback_data="Any")],
     ]
@@ -96,14 +108,15 @@ def start_over(update: Update, context: CallbackContext) -> int:
 def event_type(update: Update, context: CallbackContext) -> int:
     """Event type menu"""
     message = update.callback_query
+    context.user_data["date"] = message.data
     message.answer()
 
     keyboard = [
-        [InlineKeyboardButton("🎸 Concerts/Parties 🎉", callback_data="Comedy")],
+        [InlineKeyboardButton("🎸 Concerts/Parties 🎉", callback_data="Music/Party")],
         [InlineKeyboardButton("⛩️ Culture 🗽", callback_data="Culture")],
-        [InlineKeyboardButton("🧩 Workshop 🛍️", callback_data="Food")],
+        [InlineKeyboardButton("🧩 Workshop 🛍️", callback_data="Workshop")],
         [InlineKeyboardButton("🍱 Food/Drinks 🥂", callback_data="Food")],
-        [InlineKeyboardButton("🎨 Art/Literature 📚", callback_data="Sports")],
+        [InlineKeyboardButton("🎨 Art/Literature 📚", callback_data="Stand Up")],
         [InlineKeyboardButton("🎭 Theatre/Stand up 🎤", callback_data="Any")],
         [InlineKeyboardButton("Any ⁉️", callback_data="Any")],
     ]
@@ -135,11 +148,11 @@ def event_list(update: Update, context: CallbackContext) -> int:
     selected_event_type = message.data
     message.answer()
 
-    if "|" not in selected_event_type:
+    if "-" not in selected_event_type:
         counter = 0
     else:
-        counter = int(selected_event_type.split("|")[1])
-        selected_event_type = selected_event_type.split("|")[0]
+        counter = int(selected_event_type.split("-")[1])
+        selected_event_type = selected_event_type.split("-")[0]
         counter = counter+1
 
     keyboard = [
@@ -153,14 +166,14 @@ def event_list(update: Update, context: CallbackContext) -> int:
 
     with open("data/event_list.json", "r") as f:
         jzon = json.load(f)
-        event_group = jzon["events"][selected_event_type]
+        event_group = jzon["events"][context.user_data["date"]][selected_event_type]
 
     first_event = (
         f'1️⃣ *{event_group[counter]["event_name"]}*\n\n'
         f'Description:  {event_group[counter]["event_desc"]}\n'
         f'Start Date:  {event_group[counter]["start_date"]}\n\n'
     )
-    keyboard[0].append(InlineKeyboardButton("1️⃣", callback_data=f"details|{selected_event_type}|{counter}"))
+    keyboard[0].append(InlineKeyboardButton("1️⃣", callback_data=f"details-{selected_event_type}-{counter}"))
 
     if counter+1 <= len(event_group)-1:
         second_event = (
@@ -168,7 +181,7 @@ def event_list(update: Update, context: CallbackContext) -> int:
             f'Description:  {event_group[counter+1]["event_desc"]}\n'
             f'Start Date:  {event_group[counter+1]["start_date"]}\n\n'
         )
-        keyboard[0].append(InlineKeyboardButton("2️⃣", callback_data=f"details|{selected_event_type}|{counter+1}"))
+        keyboard[0].append(InlineKeyboardButton("2️⃣", callback_data=f"details-{selected_event_type}-{counter+1}"))
     else:
         second_event = ""
 
@@ -178,7 +191,7 @@ def event_list(update: Update, context: CallbackContext) -> int:
             f'Description:  {event_group[counter+2]["event_desc"]}\n'
             f'Start Date:  {event_group[counter+2]["start_date"]}\n\n'
         )
-        keyboard[0].append(InlineKeyboardButton("3️⃣", callback_data=f"details|{selected_event_type}|{counter+2}"))
+        keyboard[0].append(InlineKeyboardButton("3️⃣", callback_data=f"details-{selected_event_type}-{counter+2}"))
     else:
         third_event = ""
 
@@ -187,10 +200,10 @@ def event_list(update: Update, context: CallbackContext) -> int:
     last_in_list = events_array.index(max(events_array))
 
     if counter != 0:
-        keyboard[1].append(InlineKeyboardButton("⬅️", callback_data=f"{selected_event_type}|{counter-4}"))
+        keyboard[1].append(InlineKeyboardButton("⬅️", callback_data=f"{selected_event_type}-{counter-4}"))
 
     if counter+last_in_list != len(event_group)-1:
-        keyboard[1].append(InlineKeyboardButton("➡️", callback_data=f"{selected_event_type}|{counter+2}"))
+        keyboard[1].append(InlineKeyboardButton("➡️", callback_data=f"{selected_event_type}-{counter+2}"))
 
     message.edit_message_text(
         text=(events_to_display),
@@ -203,16 +216,18 @@ def event_list(update: Update, context: CallbackContext) -> int:
 
 def event_details(update: Update, context: CallbackContext) -> int:
     message = update.callback_query
-    selected_event_type = message.data.split("|")[1]
-    counter = int(message.data.split("|")[2])
+    selected_event_type = message.data.split("-")[1]
+    counter = int(message.data.split("-")[2])
     message.answer()
 
     with open("data/event_list.json", "r") as f:
         jzon = json.load(f)
-        selected_event = jzon["events"][selected_event_type][counter]
+        selected_event = jzon["events"][context.user_data["date"]][selected_event_type][counter]
     
+    event, location = prepare_event_details(selected_event)
 
     keyboard = [
+        [],
         [
             InlineKeyboardButton("Back", callback_data=f"{selected_event_type}"),
         ],
@@ -222,16 +237,11 @@ def event_details(update: Update, context: CallbackContext) -> int:
         ]
     ]
 
+    if location:
+        keyboard[0].append(InlineKeyboardButton(text=f'📍 {location["name"]}', url=location["link"]))
+
     message.edit_message_text(
-        text=(
-            f'[​​​​​​​​​​​]({selected_event["event_Image_URL"]})\n\n'
-            f'*{selected_event["event_name"]}*\n\n'
-            f'Description:  {selected_event["event_desc"]}\n'
-            f'Start Date:  {selected_event["start_date"]}\n'
-            f'End Date:  {selected_event["end_date"]}\n'
-            f'Telegram: {selected_event["contact_telegram"]}\n'
-            f'Phone: {selected_event["contact_number"]}\n'
-        ),
+        text=(event),
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode=ParseMode.MARKDOWN,
     )
@@ -307,9 +317,7 @@ def main() -> None:
     """Start the bot."""
     # Create the Updater and pass it your bot's token.
     updater = Updater(config["TOKEN"])
-
-    event_list_data = extract_event_list()
-    save_event_list(event_list_data)
+    sheet.get_sheet()
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
@@ -317,21 +325,21 @@ def main() -> None:
     # Setup conversation handler with the states START and END
     # Use the pattern parameter to pass CallbackQueries with specific
     # data pattern to the corresponding handlers.
-    event_types = "Comedy|Culture|Food|Sports|Any"
-    event_types_with_counter = f"{event_types}|[0-9]+"
+    event_types = "Music/Party|Culture|Food|Stand Up|Workshop|"""
+    event_types_with_counter = f"{event_types}-[0-9]+"
+    event_type_pattern = "event_type|today|week|month"
 
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
             "START_ROUTES": [
-                CallbackQueryHandler(event_type, pattern="^event_type$"),
+                CallbackQueryHandler(event_type, pattern="^" + event_type_pattern + "$"),
                 CallbackQueryHandler(help, pattern="^help$"),
                 CallbackQueryHandler(event_list, pattern="^" + event_types + "$"),
             ],
             "END_ROUTES": [
                 CallbackQueryHandler(event_list, pattern="^" + event_types_with_counter + "$"),
                 CallbackQueryHandler(event_details, pattern="^details"),
-                # CallbackQueryHandler(view_photos, pattern="^view_photos"),
                 CallbackQueryHandler(start_over, pattern="^event_type$"),
                 CallbackQueryHandler(end, pattern="^end$"),
             ],

@@ -1,8 +1,11 @@
 [tool.poetry]
 name = "we-go-tonight"
-version = "0.1.0"
+version = "1.0.0"
 description = ""
-authors = ["Markuss <juhnevskis.markuss@gmail.com>"]
+authors = [
+    "Markuss Juhnevskis",
+    "Daniels Aleksandrs Beigarts",
+]
 readme = "README.md"
 packages = [{include = "we_go_tonight"}]
 
@@ -11,9 +14,6 @@ python = "^3.10"
 python-telegram-bot = "^13.14"
 pyyaml = "^6.0"
 requests = "^2.28.1"
-google-api-python-client = "^2.65.0"
-google-auth-httplib2 = "^0.1.0"
-google-auth-oauthlib = "^0.7.1"
 psycopg2 = "^2.9.5"
 
 

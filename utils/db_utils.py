@@ -1,6 +1,5 @@
 import psycopg2
-from uuid import uuid4
-
+from uuid import uuid4, UUID
 
 class DBManager:
     def __init__(self, host, dbname, user, password):
@@ -44,13 +43,19 @@ class DBManager:
         """Creates new account in db."""
         telegram_name = telegram_user.first_name
         telegram_user_id = telegram_user.id
-        
+
+        try:
+            UUID(str(ref))
+
+        except ValueError:
+            ref = None
+
         if ref:
             self.cursor.execute(
                 "INSERT INTO account (id, telegram_name, telegram_user_id, refered_by)"
                 f"VALUES ('{uuid4()}', '{telegram_name}', '{telegram_user_id}', '{ref}');"
             )
-        
+
         else:
             self.cursor.execute(
                 "INSERT INTO account (id, telegram_name, telegram_user_id)"
