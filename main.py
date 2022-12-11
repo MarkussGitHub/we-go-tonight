@@ -1,31 +1,29 @@
 # TO-DO: copyright
 
+import json
 import logging
 import yaml
-import json
-from datetime import datetime, timedelta
 
+from datetime import datetime, timedelta
 from telegram import (
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    ReplyKeyboardRemove,
-    Update,
+    InlineKeyboardButton, 
+    InlineKeyboardMarkup, 
     ParseMode,
+    ReplyKeyboardRemove, 
+    Update
 )
 from telegram.ext import (
-    CallbackContext,
+    CallbackContext, 
     CallbackQueryHandler,
-    CommandHandler,
-    ConversationHandler,
-    Updater,
-    ConversationHandler,
-    MessageHandler,
+    CommandHandler, 
+    ConversationHandler, 
     Filters,
+    MessageHandler, 
+    Updater
 )
-from utils.sheet_utils import SheetManager
 from utils.db_utils import DBManager
 from utils.event_formatters import prepare_event_details
-
+from utils.sheet_utils import SheetManager
 
 with open("settings.local.yaml", "r") as f:
     config = yaml.load(f, Loader=yaml.FullLoader)
@@ -53,18 +51,22 @@ sheet = SheetManager(client_id, client_secret)
 
 def start(update: Update, context: CallbackContext) -> int:
     """Send message on `/start`."""
-    message_date = update.message.date.strftime("%Y-%m-%d %H:%M:%S")
-    current_date = datetime.utcnow()-timedelta(minutes=1)
-    current_date = current_date.strftime("%Y-%m-%d %H:%M:%S")
-    if message_date < current_date:
-        return
+    if update.message:
+        message_date = update.message.date.strftime("%Y-%m-%d %H:%M:%S")
+        current_date = datetime.utcnow()-timedelta(minutes=1)
+        current_date = current_date.strftime("%Y-%m-%d %H:%M:%S")
+        if message_date < current_date:
+            return
 
-    user = update.message.from_user
-    logger.info(f"{user.first_name}, started the conversation. User ID: {user.id}")
+        user = update.message.from_user
+        logger.info(f"{user.first_name}, started the conversation. User ID: {user.id}")
 
-    referal = context.args[0] if context.args else None
-    if db.get_account(user.id) is None:
-        db.create_account(user, referal)
+        referal = context.args[0] if context.args else None
+        if db.get_account(user.id) is None:
+            db.create_account(user, referal)
+
+    else:
+        update.message = context.bot_data["message"]
 
     keyboard = [
         [InlineKeyboardButton("Today", callback_data="today")],
@@ -108,7 +110,8 @@ def start_over(update: Update, context: CallbackContext) -> int:
 def event_type(update: Update, context: CallbackContext) -> int:
     """Event type menu"""
     message = update.callback_query
-    context.user_data["date"] = message.data
+    if message.data in ["today", "week", "month"]:
+        context.user_data["date"] = message.data
     message.answer()
 
     keyboard = [
@@ -159,8 +162,8 @@ def event_list(update: Update, context: CallbackContext) -> int:
         [],
         [],
         [
-            InlineKeyboardButton("Event Menu", callback_data="event_type"),
-            InlineKeyboardButton("Cancel", callback_data="end"),
+            InlineKeyboardButton("📄 Event Menu", callback_data="event_type"),
+            InlineKeyboardButton("❌ Cancel", callback_data="end"),
         ]
     ]
 
@@ -168,12 +171,31 @@ def event_list(update: Update, context: CallbackContext) -> int:
         jzon = json.load(f)
         event_group = jzon["events"][context.user_data["date"]][selected_event_type]
 
-    first_event = (
-        f'1️⃣ *{event_group[counter]["event_name"]}*\n\n'
-        f'Description:  {event_group[counter]["event_desc"]}\n'
-        f'Start Date:  {event_group[counter]["start_date"]}\n\n'
-    )
-    keyboard[0].append(InlineKeyboardButton("1️⃣", callback_data=f"details-{selected_event_type}-{counter}"))
+    try:
+        first_event = (
+            f'1️⃣ *{event_group[counter]["event_name"]}*\n\n'
+            f'Description:  {event_group[counter]["event_desc"]}\n'
+            f'Start Date:  {event_group[counter]["start_date"]}\n\n'
+        )
+        keyboard[0].append(InlineKeyboardButton("1️⃣", callback_data=f"details-{selected_event_type}-{counter}"))
+    except IndexError:
+        context.bot_data["message"] = message.message
+
+        keyboard = [
+            [InlineKeyboardButton("📅 Choose other date", callback_data="start")],
+            [
+                InlineKeyboardButton("📄 Event Menu", callback_data="event_type"),
+                InlineKeyboardButton("❌ Cancel", callback_data="end"),
+            ]
+        ]
+
+        message.edit_message_text(
+            text="Sadly there are no events in this category for selected date 😔",
+            reply_markup=InlineKeyboardMarkup(keyboard),
+            parse_mode=ParseMode.MARKDOWN,
+        )
+
+        return "START_ROUTES"
 
     if counter+1 <= len(event_group)-1:
         second_event = (
@@ -232,8 +254,8 @@ def event_details(update: Update, context: CallbackContext) -> int:
             InlineKeyboardButton("Back", callback_data=f"{selected_event_type}"),
         ],
         [
-            InlineKeyboardButton("Event Menu", callback_data="event_type"),
-            InlineKeyboardButton("Cancel", callback_data="end"),
+            InlineKeyboardButton("📄 Event Menu", callback_data="event_type"),
+            InlineKeyboardButton("❌ Cancel", callback_data="end"),
         ]
     ]
 
@@ -333,6 +355,7 @@ def main() -> None:
         entry_points=[CommandHandler("start", start)],
         states={
             "START_ROUTES": [
+                CallbackQueryHandler(start, pattern="^start$"),
                 CallbackQueryHandler(event_type, pattern="^" + event_type_pattern + "$"),
                 CallbackQueryHandler(help, pattern="^help$"),
                 CallbackQueryHandler(event_list, pattern="^" + event_types + "$"),
