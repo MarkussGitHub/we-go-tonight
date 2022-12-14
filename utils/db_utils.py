@@ -76,3 +76,48 @@ class DBManager:
         result = self._convert_account_to_dict(raw_result)
 
         return result
+
+    def get_advert(self, telegram_user_id):
+        """Returns advert from db by telegram_user_id."""
+        self.cursor.execute(
+            f"SELECT * FROM advert WHERE owner_id = '{telegram_user_id}'")
+        self.conn.commit()
+        raw_result = self.cursor.fetchone()
+
+        if not raw_result:
+            return False
+
+        result = self._convert_advert_to_dict(raw_result)
+
+        return result
+    
+    def delete_advert(self, advert_id):
+        """Returns account from db by telegram_user_id."""
+        self.cursor.execute(
+            f"DELETE FROM advert WHERE id = '{advert_id}'")
+        self.conn.commit()
+        
+        return None
+    
+    def create_advert(self, advert_msg_id, owner_id):
+        """Creates new advert in db."""
+        self.cursor.execute(
+            "INSERT INTO advert (id, advert_msg_id, owner_id)"
+            f"VALUES ('{uuid4()}', '{advert_msg_id}', '{owner_id}');"
+        )
+
+        self.conn.commit()
+        
+    def get_account_by_owner_id(self, advert_owner_id):
+        """Returns account from db by telegram_user_id."""
+        self.cursor.execute(
+            f"SELECT * FROM account WHERE id = '{advert_owner_id}'")
+        self.conn.commit()
+        raw_result = self.cursor.fetchone()
+
+        if not raw_result:
+            return None
+
+        result = self._convert_account_to_dict(raw_result)
+
+        return result
