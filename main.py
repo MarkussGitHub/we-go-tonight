@@ -3,6 +3,7 @@
 import json
 import logging
 import yaml
+import difflib
 
 from datetime import datetime, timedelta
 from telegram import (
@@ -293,7 +294,56 @@ def help_command(update: Update, context: CallbackContext) -> None:
         reply_markup=ReplyKeyboardRemove(),
     )
 
+def search_by_name_start(update: Update, context: CallbackContext) -> None:
+    """Search by name for user input"""
+    update.message.bot.send_message(
+        update.effective_user.id,
+        text = "What are you looking for?"
+    )
+    return "SEARCH"
 
+def get_searched_data(update: Update, context: CallbackContext) -> None:
+    """Searching for close matches using user inputed name"""
+    with open("data/event_list.json", "r") as f:
+        jzon = json.load(f)
+        raw_events = jzon["events"]
+
+    event_names = []
+    for date_key, date_value in raw_events.items():
+        for ctgry_name, ctgry_value in date_value.items():
+            for event in ctgry_value:
+                for key, value in event.items():
+                    if key == "event_name" and value:
+                        event_names.append(value)
+                        continue
+    
+    result = difflib.get_close_matches(update.message.text, event_names)
+    
+    date_key, ctgry_name, event_to_find = find_event(result, raw_events)
+    for event in raw_events[date_key][ctgry_name]:
+        if event["event_name"] == event_to_find:
+            event, location = prepare_event_details(event)
+            break
+
+    update.message.bot.send_message(update.effective_user.id,
+        text=(event),
+        parse_mode=ParseMode.MARKDOWN,
+    )
+
+    return "END_ROUTES"
+            
+            
+
+
+def find_event(result, raw_events):
+    for value1 in result:
+        for date_key, date_value in raw_events.items():
+            for ctgry_name, ctgry_value in date_value.items():
+                for event in ctgry_value:
+                    for key, value in event.items():
+                        if value == value1:
+                            return date_key, ctgry_name, value
+                        
 def pushadvert(update: Update, context: CallbackContext) -> None:
     user = update.message.from_user
     logger.info(f"User {user.id} wrote pushadvert.")
@@ -415,17 +465,34 @@ def main() -> None:
         name="push_advert",
     )
 
+    search_handler = ConversationHandler(
+        entry_points=[CommandHandler("search", search_by_name_start)],
+        states={
+            "SEARCH": [
+                MessageHandler(
+                    Filters.text & ~(Filters.command | Filters.regex("^Done$")), get_searched_data, pass_chat_data= True
+                ),
+            ],
+            "END_ROUTES": [
+                CallbackQueryHandler(end, pattern="^end$"),
+            ],
+        },
+        fallbacks=[MessageHandler(Filters.regex("^Done$"),start)],
+        name="search",
+    )
 
     # Add ConversationHandler to application that will be used for handling updates
     dispatcher.add_handler(conv_handler)
     dispatcher.add_handler(push_handler)
-
+    dispatcher.add_handler(search_handler)
     
     # on different commands - answer in Telegram
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help_command))
     dispatcher.add_handler(CommandHandler("pushadvert", pushadvert))   
-    dispatcher.add_handler(CommandHandler("approve", approval)) 
+    dispatcher.add_handler(CommandHandler("approve", push_to_group)) 
+    dispatcher.add_handler(CommandHandler("search", search_by_name_start)) 
+    
     # Start the Bot
     updater.start_polling()
 
