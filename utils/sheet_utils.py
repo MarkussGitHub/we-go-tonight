@@ -36,20 +36,36 @@ class SheetManager:
         result = {
             "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "events": {
-                "today": {},
-                "week": {},
-                "month": {},
+                "today": {
+                    "Concerts/Parties": [],
+                    "Culture": [],
+                    "Workshop": [],
+                    "Food/Drinks": [],
+                    "Art/Literature": [],
+                    "Theatre/Stand up": [],
+                },
+                "week": {
+                    "Concerts/Parties": [],
+                    "Culture": [],
+                    "Workshop": [],
+                    "Food/Drinks": [],
+                    "Art/Literature": [],
+                    "Theatre/Stand up": [],
+                },
+                "month": {
+                    "Concerts/Parties": [],
+                    "Culture": [],
+                    "Workshop": [],
+                    "Food/Drinks": [],
+                    "Art/Literature": [],
+                    "Theatre/Stand up": [],
+                },
             }
         }
         today = datetime.now().strftime("%d/%m/%Y")
         week = (datetime.now()+timedelta(days=6)).strftime("%d/%m/%Y")
         month = (datetime.now()+timedelta(days=30)).strftime("%d/%m/%Y")
         for event in event_list:
-            if event["event_type"] not in result["events"]:
-                result["events"]["today"][event["event_type"]] = []
-                result["events"]["week"][event["event_type"]] = []
-                result["events"]["month"][event["event_type"]] = []
-            
             if event["start_date"] == today:
                 result["events"]["today"][event["event_type"]].append(event)
 

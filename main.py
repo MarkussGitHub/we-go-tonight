@@ -439,7 +439,7 @@ def main() -> None:
     # Setup conversation handler with the states START and END
     # Use the pattern parameter to pass CallbackQueries with specific
     # data pattern to the corresponding handlers.
-    event_types = "Music/Party|Culture|Food|Stand Up|Workshop|"""
+    event_types = "Concerts/Parties|Culture|Workshop|Food/Drinks|Art/Literature|Theatre/Stand up"""
     event_types_with_counter = f"{event_types}-[0-9]+"
     event_type_pattern = "event_type|today|week|month"
 
