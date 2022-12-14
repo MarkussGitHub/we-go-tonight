@@ -32,8 +32,10 @@ def prepare_event_details(raw_event):
     )
     location = {}
 
-    del raw_event_copy["event_name"]
-    del raw_event_copy["event_Image_URL"]
+    if raw_event_copy.get("event_name"):
+        del raw_event_copy["event_name"]
+    if raw_event_copy.get("event_Image_URL"):
+        del raw_event_copy["event_Image_URL"]
 
     for key, value in raw_event_copy.items():
         if key in KEYS_TO_SKIP:
