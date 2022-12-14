@@ -77,7 +77,21 @@ class DBManager:
 
         return result
 
-    def get_advert(self, telegram_user_id):
+    def get_advert(self, advert_id):
+        """Returns advert from db by advert_id."""
+        self.cursor.execute(
+            f"SELECT * FROM advert WHERE id = '{advert_id}'")
+        self.conn.commit()
+        raw_result = self.cursor.fetchone()
+
+        if not raw_result:
+            return False
+
+        result = self._convert_advert_to_dict(raw_result)
+
+        return result
+
+    def get_advert_by_user(self, telegram_user_id):
         """Returns advert from db by telegram_user_id."""
         self.cursor.execute(
             f"SELECT * FROM advert WHERE owner_id = '{telegram_user_id}'")
@@ -101,12 +115,14 @@ class DBManager:
     
     def create_advert(self, advert_msg_id, owner_id):
         """Creates new advert in db."""
+        uuid = uuid4()
         self.cursor.execute(
             "INSERT INTO advert (id, advert_msg_id, owner_id)"
-            f"VALUES ('{uuid4()}', '{advert_msg_id}', '{owner_id}');"
+            f"VALUES ('{uuid}', '{advert_msg_id}', '{owner_id}');"
         )
 
         self.conn.commit()
+        return str(uuid)
         
     def get_account_by_owner_id(self, advert_owner_id):
         """Returns account from db by telegram_user_id."""

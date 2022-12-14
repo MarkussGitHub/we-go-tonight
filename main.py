@@ -65,25 +65,32 @@ def start(update: Update, context: CallbackContext) -> int:
         referal = context.args[0] if context.args else None
         if db.get_account(user.id) is None:
             db.create_account(user, referal)
+        edit_msg = False
 
     else:
         update.message = context.bot_data["message"]
+        edit_msg = True
 
     keyboard = [
         [InlineKeyboardButton("Today", callback_data="today")],
         [InlineKeyboardButton("This week", callback_data="week")],
         [InlineKeyboardButton("This month", callback_data="month")],
     ]
-    
 
-    # Message for the inline keyboard
-    update.message.reply_text(
-        text="When would you like to go?",
-        reply_markup=InlineKeyboardMarkup(keyboard),
-        parse_mode=ParseMode.MARKDOWN,
-        disable_web_page_preview=False
-    )
-    # Tell ConversationHandler that we're in state `start` now
+    if edit_msg:
+        message = update.callback_query
+        message.answer()
+        message.edit_message_text(
+            text="When would you like to go?",
+            reply_markup=InlineKeyboardMarkup(keyboard),
+        )
+
+    else:
+        update.message.reply_text(
+            text="When would you like to go?",
+            reply_markup=InlineKeyboardMarkup(keyboard),
+        )
+
     return "START_ROUTES"
 
 
@@ -93,12 +100,12 @@ def start_over(update: Update, context: CallbackContext) -> int:
     message.answer()
 
     keyboard = [
-        [InlineKeyboardButton("🎸 Concerts/Parties 🎉", callback_data="Music/Party")],
+        [InlineKeyboardButton("🎸 Concerts/Parties 🎉", callback_data="Concerts/Parties")],
         [InlineKeyboardButton("⛩️ Culture 🗽", callback_data="Culture")],
         [InlineKeyboardButton("🧩 Workshop 🛍️", callback_data="Workshop")],
-        [InlineKeyboardButton("🍱 Food/Drinks 🥂", callback_data="Food")],
-        [InlineKeyboardButton("🎨 Art/Literature 📚", callback_data="Stand Up")],
-        [InlineKeyboardButton("🎭 Theatre/Stand up 🎤", callback_data="Any")],
+        [InlineKeyboardButton("🍱 Food/Drinks 🥂", callback_data="Food/Drinks")],
+        [InlineKeyboardButton("🎨 Art/Literature 📚", callback_data="Art/Literature")],
+        [InlineKeyboardButton("🎭 Theatre/Stand up 🎤", callback_data="Theatre/Stand up")],
         [InlineKeyboardButton("Any ⁉️", callback_data="Any")],
     ]
 
@@ -117,12 +124,12 @@ def event_type(update: Update, context: CallbackContext) -> int:
     message.answer()
 
     keyboard = [
-        [InlineKeyboardButton("🎸 Concerts/Parties 🎉", callback_data="Music/Party")],
+        [InlineKeyboardButton("🎸 Concerts/Parties 🎉", callback_data="Concerts/Parties")],
         [InlineKeyboardButton("⛩️ Culture 🗽", callback_data="Culture")],
         [InlineKeyboardButton("🧩 Workshop 🛍️", callback_data="Workshop")],
-        [InlineKeyboardButton("🍱 Food/Drinks 🥂", callback_data="Food")],
-        [InlineKeyboardButton("🎨 Art/Literature 📚", callback_data="Stand Up")],
-        [InlineKeyboardButton("🎭 Theatre/Stand up 🎤", callback_data="Any")],
+        [InlineKeyboardButton("🍱 Food/Drinks 🥂", callback_data="Food/Drinks")],
+        [InlineKeyboardButton("🎨 Art/Literature 📚", callback_data="Art/Literature")],
+        [InlineKeyboardButton("🎭 Theatre/Stand up 🎤", callback_data="Theatre/Stand up")],
         [InlineKeyboardButton("Any ⁉️", callback_data="Any")],
     ]
 
@@ -318,22 +325,30 @@ def get_searched_data(update: Update, context: CallbackContext) -> None:
                         continue
 
     result = difflib.get_close_matches(update.message.text, event_names)
+    print(result)
 
-    date_key, ctgry_name, event_to_find = find_event(result, raw_events)
-    for event in raw_events[date_key][ctgry_name]:
-        if event["event_name"] == event_to_find:
-            event, location = prepare_event_details(event)
-            break
+    if result:
+        date_key, ctgry_name, event_to_find = find_event(result, raw_events)
+        for event in raw_events[date_key][ctgry_name]:
+            if event["event_name"] == event_to_find:
+                event, location = prepare_event_details(event)
+                break
 
-    update.message.bot.send_message(update.effective_user.id,
-        text=(event),
-        parse_mode=ParseMode.MARKDOWN,
-    )
+        update.message.bot.send_message(
+            update.effective_user.id,
+            text=(event),
+            parse_mode=ParseMode.MARKDOWN,
+        )
 
-    return "END_ROUTES"
+    else:
+        update.message.bot.send_message(
+            update.effective_user.id,
+            text="Couldn't find such event",
+            parse_mode=ParseMode.MARKDOWN,
+        )
+
+    return ConversationHandler.END
             
-            
-
 
 def find_event(result, raw_events):
     for value1 in result:
@@ -361,21 +376,20 @@ def push(update: Update, context: CallbackContext) -> int:
               f"\nIf it is not approved, you will be notified"),
         reply_markup= ReplyKeyboardRemove(),
     )
-    ADMIN_id = 1699557868
+    ADMIN_id = 1373382367
     data = db.get_account(update.effective_chat.id)
-    db.create_advert(update.message.message_id, data.get("id"))
+    advert_id = db.create_advert(update.message.message_id, data.get("id"))
     update.message.bot.forward_message(
         ADMIN_id,
         update.effective_chat.id,
         update.message.message_id
     )
-    advert = (db.get_advert(data.get("id")))
-    update.message.bot.send_message(ADMIN_id, advert.get ("owner_id"))
+    update.message.bot.send_message(ADMIN_id, advert_id)
         
-    return "PUSH_TO_GROUP"
+    return ConversationHandler.END
 
 def approval(update: Update, context: CallbackContext) -> int:
-    ADMIN_id = 1699557868
+    ADMIN_id = 1373382367
     if update.effective_chat.id == ADMIN_id:
         update.message.reply_text(
                 text=(f"Please write the id of the advert you're approving," 
@@ -392,8 +406,8 @@ def approval(update: Update, context: CallbackContext) -> int:
     return "PUSH_TO_GROUP"
 
 def push_to_group(update: Update, context: CallbackContext) -> int:
-    advert_owner_id = update.message.text
-    advert = db.get_advert(advert_owner_id)
+    advert_id = update.message.text
+    advert = db.get_advert(advert_id)
     advert_msg_id = advert.get("advert_msg_id")
     advert_owner = db.get_account_by_owner_id(advert.get("owner_id"))
     update.message.bot.send_message(
@@ -410,6 +424,8 @@ def push_to_group(update: Update, context: CallbackContext) -> int:
     ) 
     
     db.delete_advert(advert.get("id"))
+
+    return ConversationHandler.END
 
 def main() -> None:
     """Start the bot."""
@@ -490,7 +506,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help_command))
     dispatcher.add_handler(CommandHandler("pushadvert", pushadvert))   
-    dispatcher.add_handler(CommandHandler("approve", push_to_group)) 
+    dispatcher.add_handler(CommandHandler("approve", approval)) 
     dispatcher.add_handler(CommandHandler("search", search_by_name_start)) 
     
     # Start the Bot
