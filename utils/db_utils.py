@@ -80,7 +80,7 @@ class DBManager:
         raw_result = self.cursor.fetchone()
 
         if not raw_result:
-            return None
+            return False
 
         result = self._convert_advert_to_dict(raw_result)
 

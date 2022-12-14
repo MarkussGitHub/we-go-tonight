@@ -276,7 +276,7 @@ def push(update: Update, context: CallbackContext) -> int:
     logger.info(f"User sent an advert. {update.effective_chat.id}")
     update.message.reply_text(
         text=(f"Sent for approval to the admin, if it is approved, it will be posted in the group."
-              f" If it is not approved, you will be notified"),
+              f"\nIf it is not approved, you will be notified"),
         reply_markup= ReplyKeyboardRemove(),
     )
     ADMIN_id = 1699557868
@@ -297,13 +297,13 @@ def approval(update: Update, context: CallbackContext) -> int:
     if update.effective_chat.id == ADMIN_id:
         update.message.reply_text(
                 text=(f"Please write the id of the advert you're approving," 
-                      f"which is stated under the advert you want to approve"),
+                      f"\nwhich is stated under the advert you want to approve"),
                 reply_markup= ReplyKeyboardRemove(),
         )
     else:
         update.message.reply_text(
                 text=(f"There is no such command \U0001F972 " + 
-                      f"Please use /help to see what I can offer you"),
+                      f"\nPlease use /help to see what I can offer you"),
                 reply_markup= ReplyKeyboardRemove(),
         )
         
@@ -314,11 +314,10 @@ def push_to_group(update: Update, context: CallbackContext) -> int:
     advert = db.get_advert(advert_owner_id)
     advert_msg_id = advert.get("advert_msg_id")
     advert_owner = db.get_account_by_owner_id(advert.get("owner_id"))
-    print(advert_owner)
     update.message.bot.send_message(
         advert_owner.get("telegram_user_id"), 
         text=(f"Your advert has been posted to our group. " 
-              f"You're welcome!")
+              "\nYou're welcome!")
     )
     
     group_id = -1001535413676
