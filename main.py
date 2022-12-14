@@ -316,9 +316,9 @@ def get_searched_data(update: Update, context: CallbackContext) -> None:
                     if key == "event_name" and value:
                         event_names.append(value)
                         continue
-    
+
     result = difflib.get_close_matches(update.message.text, event_names)
-    
+
     date_key, ctgry_name, event_to_find = find_event(result, raw_events)
     for event in raw_events[date_key][ctgry_name]:
         if event["event_name"] == event_to_find:
