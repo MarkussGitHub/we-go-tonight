@@ -4,8 +4,9 @@ import json
 import logging
 import yaml
 import difflib
+import pytz
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 from telegram import (
     InlineKeyboardButton, 
     InlineKeyboardMarkup, 
@@ -106,7 +107,6 @@ def start_over(update: Update, context: CallbackContext) -> int:
         [InlineKeyboardButton("🍱 Food/Drinks 🥂", callback_data="Food/Drinks")],
         [InlineKeyboardButton("🎨 Art/Literature 📚", callback_data="Art/Literature")],
         [InlineKeyboardButton("🎭 Theatre/Stand up 🎤", callback_data="Theatre/Stand up")],
-        [InlineKeyboardButton("Any ⁉️", callback_data="Any")],
     ]
 
     message.edit_message_text(
@@ -130,7 +130,6 @@ def event_type(update: Update, context: CallbackContext) -> int:
         [InlineKeyboardButton("🍱 Food/Drinks 🥂", callback_data="Food/Drinks")],
         [InlineKeyboardButton("🎨 Art/Literature 📚", callback_data="Art/Literature")],
         [InlineKeyboardButton("🎭 Theatre/Stand up 🎤", callback_data="Theatre/Stand up")],
-        [InlineKeyboardButton("Any ⁉️", callback_data="Any")],
     ]
 
     message.edit_message_text(
@@ -163,9 +162,12 @@ def event_list(update: Update, context: CallbackContext) -> int:
     if "-" not in selected_event_type:
         counter = 0
     else:
-        counter = int(selected_event_type.split("-")[1])
+        try:
+            counter = int(selected_event_type.split("-")[1])
+            counter = counter+1
+        except ValueError:
+            counter = 0
         selected_event_type = selected_event_type.split("-")[0]
-        counter = counter+1
 
     keyboard = [
         [],
@@ -256,6 +258,7 @@ def event_details(update: Update, context: CallbackContext) -> int:
         selected_event = jzon["events"][context.user_data["date"]][selected_event_type][counter]
     
     event, location = prepare_event_details(selected_event)
+    print(selected_event_type)
 
     keyboard = [
         [],
@@ -325,7 +328,8 @@ def get_searched_data(update: Update, context: CallbackContext) -> None:
                         continue
 
     result = difflib.get_close_matches(update.message.text, event_names)
-    print(result)
+
+    keyboard = [[]]
 
     if result:
         date_key, ctgry_name, event_to_find = find_event(result, raw_events)
@@ -333,10 +337,14 @@ def get_searched_data(update: Update, context: CallbackContext) -> None:
             if event["event_name"] == event_to_find:
                 event, location = prepare_event_details(event)
                 break
+        
+        if location:
+            keyboard[0].append(InlineKeyboardButton(text=f'📍 {location["name"]}', url=location["link"]))
 
         update.message.bot.send_message(
             update.effective_user.id,
             text=(event),
+            reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode=ParseMode.MARKDOWN,
         )
 
@@ -427,11 +435,23 @@ def push_to_group(update: Update, context: CallbackContext) -> int:
 
     return ConversationHandler.END
 
+def event_list_manual_update(update: Update, context: CallbackContext) -> None:
+    sheet.get_sheet()
+    return
+
+def event_list_updater(update: Update) -> None:
+    sheet.get_sheet()
+    return
+
 def main() -> None:
     """Start the bot."""
     # Create the Updater and pass it your bot's token.
     updater = Updater(config["TOKEN"])
     sheet.get_sheet()
+
+    updater.job_queue.run_daily(event_list_updater,
+                                time(hour=1, minute=51, tzinfo=pytz.timezone('Europe/Riga')),
+                                days=(0, 1, 2, 3, 4, 5, 6), name="sheet", context=None)
 
     # Get the dispatcher to register handlers
     dispatcher = updater.dispatcher
@@ -439,7 +459,7 @@ def main() -> None:
     # Setup conversation handler with the states START and END
     # Use the pattern parameter to pass CallbackQueries with specific
     # data pattern to the corresponding handlers.
-    event_types = "Concerts/Parties|Culture|Workshop|Food/Drinks|Art/Literature|Theatre/Stand up"""
+    event_types = "Concerts/Parties|Culture|Workshop|Food/Drinks|Art/Literature|Theatre/Stand up|"""
     event_types_with_counter = f"{event_types}-[0-9]+"
     event_type_pattern = "event_type|today|week|month"
 
@@ -451,6 +471,7 @@ def main() -> None:
                 CallbackQueryHandler(event_type, pattern="^" + event_type_pattern + "$"),
                 CallbackQueryHandler(help, pattern="^help$"),
                 CallbackQueryHandler(event_list, pattern="^" + event_types + "$"),
+                CallbackQueryHandler(end, pattern="^end$"),
             ],
             "END_ROUTES": [
                 CallbackQueryHandler(event_list, pattern="^" + event_types_with_counter + "$"),
@@ -505,9 +526,10 @@ def main() -> None:
     # on different commands - answer in Telegram
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help_command))
-    dispatcher.add_handler(CommandHandler("pushadvert", pushadvert))   
-    dispatcher.add_handler(CommandHandler("approve", approval)) 
-    dispatcher.add_handler(CommandHandler("search", search_by_name_start)) 
+    dispatcher.add_handler(CommandHandler("pushadvert", pushadvert))
+    dispatcher.add_handler(CommandHandler("approve", approval))
+    dispatcher.add_handler(CommandHandler("search", search_by_name_start))
+    dispatcher.add_handler(CommandHandler("update", event_list_manual_update))
     
     # Start the Bot
     updater.start_polling()

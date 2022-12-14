@@ -2,6 +2,7 @@ import requests
 import json
 import logging
 import yaml
+from copy import deepcopy
 
 from uuid import uuid4
 from urllib.parse import urlparse, parse_qs
@@ -66,6 +67,9 @@ class SheetManager:
         week = (datetime.now()+timedelta(days=6)).strftime("%d/%m/%Y")
         month = (datetime.now()+timedelta(days=30)).strftime("%d/%m/%Y")
         for event in event_list:
+            if not event.get("start_date"):
+                continue
+
             if event["start_date"] == today:
                 result["events"]["today"][event["event_type"]].append(event)
 
@@ -75,8 +79,14 @@ class SheetManager:
             if event["start_date"] <= month:
                 result["events"]["month"][event["event_type"]].append(event)
 
+        result_sorted = deepcopy(result)
+
+        for date_key, date_value in result["events"].items():
+            for event_key, event_value in date_value.items():
+                result_sorted["events"][date_key][event_key] = sorted(event_value, key=lambda x: datetime.strptime(x["start_date"], '%d/%m/%Y'))
+
         with open('data/event_list.json', 'w') as f:
-            json.dump(result, f, indent=4)
+            json.dump(result_sorted, f, indent=4)
             logger.info("Event list saved to file.")
 
     @property
