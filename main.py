@@ -436,8 +436,13 @@ def push_to_group(update: Update, context: CallbackContext) -> int:
     return ConversationHandler.END
 
 def event_list_manual_update(update: Update, context: CallbackContext) -> None:
-    sheet.get_sheet()
-    return
+    user = update.message.from_user
+
+    if db.get_account(user.id).get("is_staff"):
+        sheet.get_sheet()
+        logger.info(f"{user.first_name} updated event list manually. User ID: {user.id}")
+    else:
+        return
 
 def event_list_updater(update: Update) -> None:
     sheet.get_sheet()
@@ -450,7 +455,7 @@ def main() -> None:
     sheet.get_sheet()
 
     updater.job_queue.run_daily(event_list_updater,
-                                time(hour=1, minute=51, tzinfo=pytz.timezone('Europe/Riga')),
+                                time(hour=4, minute=00, tzinfo=pytz.timezone('Europe/Riga')),
                                 days=(0, 1, 2, 3, 4, 5, 6), name="sheet", context=None)
 
     # Get the dispatcher to register handlers
