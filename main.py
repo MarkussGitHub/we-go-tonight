@@ -415,6 +415,8 @@ def push_to_group(update: Update, context: CallbackContext) -> int:
         update.message.reply_text(
                 text=(f"Adver with id \"{advert_id}\" does not exist"),
         )
+
+        return ConversationHandler.END
     advert_msg_id = advert.get("advert_msg_id")
     advert_owner = db.get_account_by_owner_id(advert.get("owner_id"))
     update.message.bot.send_message(
