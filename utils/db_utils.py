@@ -111,6 +111,12 @@ class DBManager:
 
     def get_advert(self, advert_id):
         """Returns advert from db by advert_id."""
+        try:
+            UUID(str(advert_id))
+
+        except ValueError:
+            return False
+
         self.cursor.execute(
             f"SELECT * FROM advert WHERE id = '{advert_id}'")
         self.conn.commit()
