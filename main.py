@@ -40,6 +40,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 host = config["DB_HOST"]
+port = config["DB_PORT"]
 dbname = config["DB_NAME"]
 user = config["DB_USER"]
 password = config["DB_PASSWORD"]
@@ -47,7 +48,7 @@ client_id = config["GOOGLE_CLIENT_ID"]
 client_secret = config["GOOGLE_CLIENT_SECRET"]
 
 
-db = DBManager(host, dbname, user, password)
+db = DBManager(host, dbname, user, password, port)
 sheet = SheetManager(client_id, client_secret)
 
 

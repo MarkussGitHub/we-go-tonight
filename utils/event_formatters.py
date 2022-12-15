@@ -27,7 +27,7 @@ def prepare_event_details(raw_event):
             del raw_event_copy[key]
 
     event = (
-        f'[​​​​​​​​​​​]({raw_event_copy.get("event_Image_URL", "")})\n\n'
+        f'[​​​​​​​​​​​]({raw_event_copy.get("event_Image_URL", "")})'
         f'*{raw_event_copy["event_name"]}*\n\n'
     )
     location = {}

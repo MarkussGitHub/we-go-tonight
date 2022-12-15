@@ -2,8 +2,9 @@ import psycopg2
 from uuid import uuid4, UUID
 
 class DBManager:
-    def __init__(self, host, dbname, user, password):
+    def __init__(self, host, dbname, user, password, port):
         self.host = host
+        self.port = port
         self.dbname = dbname
         self.user = user
         self.password = password
@@ -12,7 +13,7 @@ class DBManager:
             user=self.user,
             password=self.password,
             host=self.host,
-            port="5432",
+            port=self.port,
         )
         self.cursor = self.conn.cursor()
         self.conn.commit()
