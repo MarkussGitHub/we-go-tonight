@@ -405,18 +405,16 @@ def approval(update: Update, context: CallbackContext) -> int:
                       f"\nwhich is stated under the advert you want to approve"),
                 reply_markup= ReplyKeyboardRemove(),
         )
-    else:
-        update.message.reply_text(
-                text=(f"There is no such command \U0001F972 " + 
-                      f"\nPlease use /help to see what I can offer you"),
-                reply_markup= ReplyKeyboardRemove(),
-        )
-        
+
     return "PUSH_TO_GROUP"
 
 def push_to_group(update: Update, context: CallbackContext) -> int:
     advert_id = update.message.text
     advert = db.get_advert(advert_id)
+    if not advert:
+        update.message.reply_text(
+                text=(f"Adver with id \"{advert_id}\" does not exist"),
+        )
     advert_msg_id = advert.get("advert_msg_id")
     advert_owner = db.get_account_by_owner_id(advert.get("owner_id"))
     update.message.bot.send_message(
