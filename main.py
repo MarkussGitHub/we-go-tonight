@@ -243,6 +243,7 @@ def event_list(update: Update, context: CallbackContext) -> int:
         text=(events_to_display),
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode=ParseMode.MARKDOWN,
+        disable_web_page_preview=True,
     )
 
     return "END_ROUTES"
@@ -259,7 +260,6 @@ def event_details(update: Update, context: CallbackContext) -> int:
         selected_event = jzon["events"][context.user_data["date"]][selected_event_type][counter]
     
     event, location = prepare_event_details(selected_event)
-    print(selected_event_type)
 
     keyboard = [
         [],

@@ -73,10 +73,10 @@ class SheetManager:
             if event["start_date"] == today:
                 result["events"]["today"][event["event_type"]].append(event)
 
-            if event["start_date"] <= week:
+            if event["start_date"] <= week and event["start_date"] >= today:
                 result["events"]["week"][event["event_type"]].append(event)
 
-            if event["start_date"] <= month:
+            if event["start_date"] <= month and event["start_date"] >= today:
                 result["events"]["month"][event["event_type"]].append(event)
 
         result_sorted = deepcopy(result)
