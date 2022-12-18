@@ -4,7 +4,7 @@ import json
 import logging
 import yaml
 import pytz
-from thefuzz import process, fuzz
+from thefuzz import process
 
 from datetime import datetime, timedelta, time
 from telegram import (
@@ -538,7 +538,7 @@ def push_to_group(update: Update, context: CallbackContext) -> int:
     advert = db.get_advert(advert_id)
     if not advert:
         update.message.reply_text(
-                text=(f"Adver with id \"{advert_id}\" does not exist"),
+                text=(f"Advert with id \"{advert_id}\" does not exist"),
         )
 
         return ConversationHandler.END
@@ -550,12 +550,12 @@ def push_to_group(update: Update, context: CallbackContext) -> int:
               "\nYou're welcome!")
     )
     
-    group_id = -1001535413676
+    group_id = -1001792279795
     update.message.bot.copy_message(
         group_id,
         advert_owner.get("telegram_user_id"),
         advert_msg_id
-    ) 
+    )
     
     db.delete_advert(advert.get("id"))
 
