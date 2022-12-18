@@ -561,6 +561,7 @@ def denial_reason(update: Update, context: CallbackContext) -> int:
         context.user_data["chat_id"],
         text
     )
+    return ConversationHandler.END
 
 
 def event_list_manual_update(update: Update, context: CallbackContext) -> None:
