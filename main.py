@@ -3,8 +3,8 @@
 import json
 import logging
 import yaml
-import difflib
 import pytz
+from thefuzz import process, fuzz
 
 from datetime import datetime, timedelta, time
 from telegram import (
@@ -70,7 +70,7 @@ def start(update: Update, context: CallbackContext) -> int:
         edit_msg = False
 
     else:
-        update.message = context.bot_data["message"]
+        update.message = context.chat_data["message"]
         edit_msg = True
 
     keyboard = [
@@ -279,7 +279,7 @@ def event_list(update: Update, context: CallbackContext) -> int:
     try:
         keyboard.insert(0, [InlineKeyboardButton(event_group[counter]["event_name"], callback_data=f"details-{selected_event_type}-{counter}-{counter}")])
     except IndexError:
-        context.bot_data["message"] = message.message
+        context.chat_data["message"] = message.message
 
         keyboard = [
             [InlineKeyboardButton("📅 Choose other date", callback_data="start")],
@@ -324,7 +324,6 @@ def event_list(update: Update, context: CallbackContext) -> int:
                 keyboard[len(keyboard)-2].append(InlineKeyboardButton("➡️", callback_data=f"{selected_event_type}-{counter}"))
 
     event_type_emoji_mapping = {
-        "Theatre/Stand up": "🎭 Theatre/Stand up 🎤",
         "Concerts/Parties": "🎸 Concerts/Parties 🎉",
         "Culture": "⛩️ Culture 🗽",
         "Workshop": "🧩 Workshop 🛍️",
@@ -378,6 +377,30 @@ def event_details(update: Update, context: CallbackContext) -> int:
     return "END_ROUTES"
 
 
+def event_details_from_search(update: Update, context: CallbackContext) -> int:
+    message = update.callback_query
+    event_name = message.data.split("-")[1]
+    message.answer()
+
+    for event in context.chat_data["found_events"]:
+        if event["event_name"] == event_name:
+            event, location = prepare_event_details(event)
+            break
+
+    keyboard = [[]]
+
+    if location:
+        keyboard[0].append(InlineKeyboardButton(text=f'📍 {location["name"]}', url=location["link"]))
+
+    message.edit_message_text(
+        text=(event),
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode=ParseMode.MARKDOWN,
+    )
+
+    return ConversationHandler.END
+
+
 def end(update: Update, context: CallbackContext) -> int:
     """
     Returns `ConversationHandler.END`, which tells the
@@ -418,16 +441,15 @@ def get_searched_data(update: Update, context: CallbackContext) -> None:
         for ctgry_name, ctgry_value in date_value.items():
             for event in ctgry_value:
                 for key, value in event.items():
-                    if key == "event_name" and value:
+                    if key == "event_name" and value not in event_names:
                         event_names.append(value)
                         continue
 
-    result = difflib.get_close_matches(update.message.text, event_names)
-
+    res = process.extractBests(update.message.text, event_names, limit=5, score_cutoff=50)
     keyboard = [[]]
 
-    if result:
-        date_key, ctgry_name, event_to_find = find_event(result, raw_events)
+    if len(res) == 1:
+        date_key, ctgry_name, event_to_find = find_event(res[0][0], raw_events)
         for event in raw_events[date_key][ctgry_name]:
             if event["event_name"] == event_to_find:
                 event, location = prepare_event_details(event)
@@ -442,6 +464,24 @@ def get_searched_data(update: Update, context: CallbackContext) -> None:
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode=ParseMode.MARKDOWN,
         )
+
+    elif len(res) > 1:
+        context.chat_data["found_events"] = []
+        for option in res:
+            date_key, ctgry_name, event_to_find = find_event(option[0], raw_events)
+            for event in raw_events[date_key][ctgry_name]:
+                if event["event_name"] == event_to_find:
+                    context.chat_data["found_events"].append(event)
+                    break
+            keyboard.append([InlineKeyboardButton(event_to_find, callback_data=f"details-{event_to_find}")])
+
+        update.message.bot.send_message(
+            update.effective_user.id,
+            text="Here are events that i could find",
+            reply_markup=InlineKeyboardMarkup(keyboard),
+            parse_mode=ParseMode.MARKDOWN,
+        )
+        return "END_ROUTES"
 
     else:
         update.message.bot.send_message(
@@ -602,11 +642,13 @@ def main() -> None:
                 ),
             ],
             "END_ROUTES": [
+                CallbackQueryHandler(event_details_from_search, pattern="^details"),
                 CallbackQueryHandler(end, pattern="^end$"),
             ],
         },
         fallbacks=[MessageHandler(Filters.regex("^Done$"),start)],
         name="search",
+        allow_reentry=True
     )
 
     # Add ConversationHandler to application that will be used for handling updates
