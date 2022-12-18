@@ -35,7 +35,7 @@ class SheetManager:
             event_list.append(dict(zip(placeholders, event)))
 
         result = {
-            "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "last_updated": datetime.now().strftime("%Y/%m/%d %H:%M:%S"),
             "events": {
                 "today": {
                     "Concerts/Parties": [],
@@ -63,18 +63,18 @@ class SheetManager:
                 },
             }
         }
-        today_str = datetime.now().strftime("%d/%m/%Y")
-        today = datetime.strptime(today_str, "%d/%m/%Y")
-        week_str = (datetime.now()+timedelta(days=6)).strftime("%d/%m/%Y")
-        week = datetime.strptime(week_str, "%d/%m/%Y")
-        month_str = (datetime.now()+timedelta(days=40)).strftime("%d/%m/%Y")
-        month = datetime.strptime(month_str, "%d/%m/%Y")
+        today_str = datetime.now().strftime("%d/%m/%Y %H:%M")
+        today = datetime.strptime(today_str, "%d/%m/%Y %H:%M")
+        week_str = (datetime.now()+timedelta(days=6)).strftime("%d/%m/%Y %H:%M")
+        week = datetime.strptime(week_str, "%d/%m/%Y %H:%M")
+        month_str = (datetime.now()+timedelta(days=40)).strftime("%d/%m/%Y %H:%M")
+        month = datetime.strptime(month_str, "%d/%m/%Y %H:%M")
         for event in event_list:
             if not event.get("start_date"):
                 continue
 
             else:
-                start_date = datetime.strptime(event["start_date"], "%d/%m/%Y")
+                start_date = datetime.strptime(event["start_date"], "%d/%m/%Y %H:%M")
 
             if start_date == today:
                 result["events"]["today"][event["event_type"]].append(event)
@@ -89,7 +89,7 @@ class SheetManager:
 
         for date_key, date_value in result["events"].items():
             for event_key, event_value in date_value.items():
-                result_sorted["events"][date_key][event_key] = sorted(event_value, key=lambda x: datetime.strptime(x["start_date"], '%d/%m/%Y'))
+                result_sorted["events"][date_key][event_key] = sorted(event_value, key=lambda x: datetime.strptime(x["start_date"], "%d/%m/%Y %H:%M"))
 
         with open('data/event_list.json', 'w') as f:
             json.dump(result_sorted, f, indent=4)
@@ -205,7 +205,7 @@ class SheetManager:
         logger.info("Getting sheet")
 
         r = requests.get(
-            url=self.base_url + "1GnS2Soa3llJcxUugvsORYrz0jLkgfZgCKVyJwkn45jc/values/Lapa1!A1:Q",
+            url=self.base_url + "1GnS2Soa3llJcxUugvsORYrz0jLkgfZgCKVyJwkn45jc/values/Events!A1:N",
             headers={
                 "Authorization": f"Bearer {self.access_token}"
             }

@@ -12,10 +12,9 @@ def prepare_event_details(raw_event):
     }
 
     KEYS_TO_SKIP = [
+        "event_name",
         "hyperlink_text",
         "booking_availability",
-        "start_time",
-        "end_time",
         "event_type",
         "availability_left",
     ]
@@ -27,12 +26,12 @@ def prepare_event_details(raw_event):
 
     event = (
         f'[​​​​​​​​​​​]({raw_event_copy.get("event_Image_URL", "")})'
-        f'*{raw_event_copy["event_name"]}*\n\n'
+        f'*{raw_event_copy["full_event_name"]}*\n\n'
     )
     location = {}
 
-    if raw_event_copy.get("event_name"):
-        del raw_event_copy["event_name"]
+    if raw_event_copy.get("full_event_name"):
+        del raw_event_copy["full_event_name"]
     if raw_event_copy.get("event_Image_URL"):
         del raw_event_copy["event_Image_URL"]
 
@@ -40,13 +39,13 @@ def prepare_event_details(raw_event):
         if key in KEYS_TO_SKIP:
             continue
         if key == "hyperlink":
-            event += f'[{raw_event_copy["hyperlink_text"]}]({value})\n'
+            event += f'[More info here.]({value})\n'
             continue
         if key == "start_date":
-            event += f'{key_name_mapping[key]}: {value} {raw_event_copy.get("start_time", "")}\n'
+            event += f'{key_name_mapping[key]}: {value}\n'
             continue
         if key == "end_date":
-            event += f'{key_name_mapping[key]}: {value} {raw_event_copy.get("end_time", "")}\n'
+            event += f'{key_name_mapping[key]}: {value}\n'
             continue
         if key == "location":
             location["name"] = value
