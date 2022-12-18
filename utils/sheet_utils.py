@@ -63,20 +63,26 @@ class SheetManager:
                 },
             }
         }
-        today = datetime.now().strftime("%d/%m/%Y")
-        week = (datetime.now()+timedelta(days=6)).strftime("%d/%m/%Y")
-        month = (datetime.now()+timedelta(days=30)).strftime("%d/%m/%Y")
+        today_str = datetime.now().strftime("%d/%m/%Y")
+        today = datetime.strptime(today_str, "%d/%m/%Y")
+        week_str = (datetime.now()+timedelta(days=6)).strftime("%d/%m/%Y")
+        week = datetime.strptime(week_str, "%d/%m/%Y")
+        month_str = (datetime.now()+timedelta(days=40)).strftime("%d/%m/%Y")
+        month = datetime.strptime(month_str, "%d/%m/%Y")
         for event in event_list:
             if not event.get("start_date"):
                 continue
 
-            if event["start_date"] == today:
+            else:
+                start_date = datetime.strptime(event["start_date"], "%d/%m/%Y")
+
+            if start_date == today:
                 result["events"]["today"][event["event_type"]].append(event)
 
-            if event["start_date"] <= week and event["start_date"] >= today:
+            if start_date <= week and start_date >= today:
                 result["events"]["week"][event["event_type"]].append(event)
 
-            if event["start_date"] <= month and event["start_date"] >= today:
+            if start_date <= month and start_date >= today:
                 result["events"]["month"][event["event_type"]].append(event)
 
         result_sorted = deepcopy(result)

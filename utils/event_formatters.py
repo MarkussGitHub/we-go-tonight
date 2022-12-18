@@ -2,7 +2,6 @@ from copy import deepcopy
 
 def prepare_event_details(raw_event):
     key_name_mapping = {
-        "event_desc": "Event description",
         "location": "Location",
         "location_link": "Location link",
         "start_date": "Start date",
@@ -55,6 +54,18 @@ def prepare_event_details(raw_event):
         if key == "location_link":
             location["link"] = value
             continue
+        if key == "event_desc":
+            event += value
+            continue
         event += f'{key_name_mapping[key]}: {value}\n'
 
     return event, location
+    
+def find_event(result, raw_events):
+    for value1 in result:
+        for date_key, date_value in raw_events.items():
+            for ctgry_name, ctgry_value in date_value.items():
+                for event in ctgry_value:
+                    for key, value in event.items():
+                        if value == value1:
+                            return date_key, ctgry_name, value

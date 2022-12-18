@@ -83,31 +83,27 @@ class DBManager:
             ref = None
 
         if ref:
-            self.cursor.execute(
-                "INSERT INTO account (id, telegram_name, telegram_user_id, refered_by)"
-                f"VALUES ('{uuid4()}', '{telegram_name}', '{telegram_user_id}', '{ref}');"
-            )
+            sql_query = "INSERT INTO account (id, telegram_name, telegram_user_id, refered_by) VALUES (%s, %s, %s, %s)"
+            data = (str(uuid4()), telegram_name, telegram_user_id, ref,)
+            self.cursor.execute(sql_query, data)
 
         else:
-            self.cursor.execute(
-                "INSERT INTO account (id, telegram_name, telegram_user_id)"
-                f"VALUES ('{uuid4()}', '{telegram_name}', '{telegram_user_id}');"
-            )
+            sql_query = "INSERT INTO account (id, telegram_name, telegram_user_id) VALUES (%s, %s, %s)"
+            data = (str(uuid4()), telegram_name, telegram_user_id,)
+            self.cursor.execute(sql_query, data)
         self.conn.commit()
 
-    def get_account(self, telegram_user_id):
+    def get_account(self, telegram_user_id: str):
         """Returns account from db by telegram_user_id."""
-        self.cursor.execute(
-            f"SELECT * FROM account WHERE telegram_user_id = '{telegram_user_id}'")
+        sql_query = "SELECT * FROM account WHERE telegram_user_id = '%s'"
+        data = (telegram_user_id,)
+        self.cursor.execute(sql_query, data)
         self.conn.commit()
         raw_result = self.cursor.fetchone()
 
-        if not raw_result:
-            return None
-
-        result = self._convert_account_to_dict(raw_result)
-
-        return result
+        if raw_result:
+            result = self._convert_account_to_dict(raw_result)
+            return result
 
     def get_advert(self, advert_id):
         """Returns advert from db by advert_id."""
@@ -117,36 +113,33 @@ class DBManager:
         except ValueError:
             return False
 
-        self.cursor.execute(
-            f"SELECT * FROM advert WHERE id = '{advert_id}'")
+        sql_query = "SELECT * FROM advert WHERE id = %s"
+        data = (advert_id,)
+        self.cursor.execute(sql_query, data)
         self.conn.commit()
         raw_result = self.cursor.fetchone()
 
-        if not raw_result:
-            return False
-
-        result = self._convert_advert_to_dict(raw_result)
-
-        return result
+        if raw_result:
+            result = self._convert_advert_to_dict(raw_result)
+            return result
 
     def get_advert_by_user(self, telegram_user_id):
         """Returns advert from db by telegram_user_id."""
-        self.cursor.execute(
-            f"SELECT * FROM advert WHERE owner_id = '{telegram_user_id}'")
+        sql_query = "SELECT * FROM advert WHERE owner_id = '%s'"
+        data = (telegram_user_id,)
+        self.cursor.execute(sql_query, data)
         self.conn.commit()
         raw_result = self.cursor.fetchone()
 
-        if not raw_result:
-            return False
-
-        result = self._convert_advert_to_dict(raw_result)
-
-        return result
+        if raw_result:
+            result = self._convert_advert_to_dict(raw_result)
+            return result
     
     def delete_advert(self, advert_id):
         """Returns account from db by telegram_user_id."""
-        self.cursor.execute(
-            f"DELETE FROM advert WHERE id = '{advert_id}'")
+        sql_query = "DELETE FROM advert WHERE id = %s"
+        data = (advert_id,)
+        self.cursor.execute(sql_query, data)
         self.conn.commit()
         
         return None
@@ -154,24 +147,21 @@ class DBManager:
     def create_advert(self, advert_msg_id, owner_id):
         """Creates new advert in db."""
         uuid = uuid4()
-        self.cursor.execute(
-            "INSERT INTO advert (id, advert_msg_id, owner_id)"
-            f"VALUES ('{uuid}', '{advert_msg_id}', '{owner_id}');"
-        )
+        sql_query = "INSERT INTO advert (id, advert_msg_id, owner_id) VALUES (%s, %s, %s)"
+        data = (str(uuid), advert_msg_id, owner_id,)
+        self.cursor.execute(sql_query, data)
 
         self.conn.commit()
         return str(uuid)
         
     def get_account_by_owner_id(self, advert_owner_id):
         """Returns account from db by telegram_user_id."""
-        self.cursor.execute(
-            f"SELECT * FROM account WHERE id = '{advert_owner_id}'")
+        sql_query = "SELECT * FROM account WHERE id = %s"
+        data = (advert_owner_id,)
+        self.cursor.execute(sql_query, data)
         self.conn.commit()
         raw_result = self.cursor.fetchone()
 
-        if not raw_result:
-            return None
-
-        result = self._convert_account_to_dict(raw_result)
-
-        return result
+        if raw_result:
+            result = self._convert_account_to_dict(raw_result)
+            return result
