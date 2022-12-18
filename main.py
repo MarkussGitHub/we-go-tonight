@@ -470,7 +470,7 @@ def push(update: Update, context: CallbackContext) -> int:
               f"\nIf it is not approved, you will be notified"),
         reply_markup= ReplyKeyboardRemove(),
     )
-    ADMIN_id = 1373382367
+    ADMIN_id = 1699557868
     data = db.get_account(update.effective_chat.id)
     advert_id = db.create_advert(update.message.message_id, data.get("id"))
     update.message.bot.forward_message(
@@ -483,7 +483,7 @@ def push(update: Update, context: CallbackContext) -> int:
     return ConversationHandler.END
 
 def approval(update: Update, context: CallbackContext) -> int:
-    ADMIN_id = 1373382367
+    ADMIN_id = 1699557868
     if update.effective_chat.id == ADMIN_id:
         update.message.reply_text(
                 text=(f"Please write the id of the advert you're approving," 
@@ -520,6 +520,48 @@ def push_to_group(update: Update, context: CallbackContext) -> int:
     db.delete_advert(advert.get("id"))
 
     return ConversationHandler.END
+
+def denial(update: Update, context: CallbackContext) -> int:
+    ADMIN_id = 1699557868
+    if update.effective_chat.id == ADMIN_id:
+        update.message.reply_text(
+                text=(f"Please write the id of the advert you're denying," 
+                      f"\nwhich is stated under the advert you want to deny"),
+                reply_markup= ReplyKeyboardRemove(),
+        )
+
+    return "DENY"
+
+def denial_exact_ad(update: Update, context: CallbackContext) -> int:
+    advert_id = update.message.text
+    advert = db.get_advert(advert_id)
+    if not advert:
+        update.message.reply_text(
+                text=(f"Advert with id \"{advert_id}\" does not exist"),
+        )
+
+        return ConversationHandler.END
+    else:
+        advert_owner = db.get_account_by_owner_id(advert.get("owner_id"))
+        update.message.bot.send_message(
+            advert_owner.get("telegram_user_id"), 
+            text=(f"Your advert has been denied, you can find the reason in the next message. " 
+                "\nPlease contact us if you think something isn't right wegotonight.dev@gmail.com!")
+        )
+        db.delete_advert(advert.get("id"))
+        context.user_data["chat_id"] = advert_owner.get("telegram_user_id")
+        update.message.reply_text(
+                text=(f"Please write the reason of denial"),
+        )
+    return "REASON"
+
+def denial_reason(update: Update, context: CallbackContext) -> int:
+    text = update.message.text
+    update.message.bot.send_message(
+        context.user_data["chat_id"],
+        text
+    )
+
 
 def event_list_manual_update(update: Update, context: CallbackContext) -> None:
     user = update.message.from_user
@@ -592,7 +634,24 @@ def main() -> None:
         fallbacks=[MessageHandler(Filters.regex("^Done$"),push)],
         name="push_advert",
     )
-
+    denial_handler = ConversationHandler(
+        entry_points=[CommandHandler("deny", denial)],
+                    
+        states={
+            "DENY": [
+                MessageHandler(
+                    Filters.photo | Filters.text & ~(Filters.command | Filters.regex("^Done$")), denial_exact_ad, pass_chat_data= True
+                ),
+            ],
+            "REASON":[
+                MessageHandler(
+                    Filters.photo | Filters.text & ~(Filters.command | Filters.regex("^Done$")), denial_reason, pass_chat_data= True
+                ),
+            ]
+        },
+        fallbacks=[MessageHandler(Filters.regex("^Cancel$"),denial)],
+        name="deny_advert",
+    )
     search_handler = ConversationHandler(
         entry_points=[CommandHandler("search", search_by_name_start)],
         states={
@@ -613,12 +672,14 @@ def main() -> None:
     dispatcher.add_handler(conv_handler)
     dispatcher.add_handler(push_handler)
     dispatcher.add_handler(search_handler)
+    dispatcher.add_handler(denial_handler)
     
     # on different commands - answer in Telegram
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(CommandHandler("help", help_command))
     dispatcher.add_handler(CommandHandler("pushadvert", pushadvert))
     dispatcher.add_handler(CommandHandler("approve", approval))
+    dispatcher.add_handler(CommandHandler("deny", denial))
     dispatcher.add_handler(CommandHandler("search", search_by_name_start))
     dispatcher.add_handler(CommandHandler("update", event_list_manual_update))
     
