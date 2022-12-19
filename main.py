@@ -470,10 +470,10 @@ def get_searched_data(update: Update, context: CallbackContext) -> None:
         for option in res:
             date_key, ctgry_name, event_to_find = find_event(option[0], raw_events)
             for event in raw_events[date_key][ctgry_name]:
-                if event["event_name"] == event_to_find:
+                if event["full_event_name"] == event_to_find:
                     context.chat_data["found_events"].append(event)
                     break
-            keyboard.append([InlineKeyboardButton(event_to_find, callback_data=f"details-{event_to_find}")])
+            keyboard.append([InlineKeyboardButton(event_to_find, callback_data=f"searchdetails-{event_to_find}")])
 
         update.message.bot.send_message(
             update.effective_user.id,
@@ -609,6 +609,9 @@ def event_list_manual_update(update: Update, context: CallbackContext) -> None:
 
     if db.get_account(user.id).get("is_staff"):
         sheet.get_sheet()
+        update.message.reply_text(
+            text="Event list updated successfully!",
+        )
         logger.info(f"{user.first_name} updated event list manually. User ID: {user.id}")
     else:
         return
@@ -702,7 +705,7 @@ def main() -> None:
                 ),
             ],
             "END_ROUTES": [
-                CallbackQueryHandler(event_details_from_search, pattern="^details"),
+                CallbackQueryHandler(event_details_from_search, pattern="^searchdetails"),
                 CallbackQueryHandler(end, pattern="^end$"),
             ],
         },

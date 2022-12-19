@@ -54,7 +54,7 @@ def prepare_event_details(raw_event):
             location["link"] = value
             continue
         if key == "event_desc":
-            event += value
+            event += f"{value}\n"
             continue
         event += f'{key_name_mapping[key]}: {value}\n'
 
