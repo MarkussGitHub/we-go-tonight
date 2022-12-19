@@ -65,9 +65,9 @@ class SheetManager:
         }
         today_str = datetime.now().strftime("%d/%m/%Y %H:%M")
         today = datetime.strptime(today_str, "%d/%m/%Y %H:%M")
-        week_str = (datetime.now()+timedelta(days=6)).strftime("%d/%m/%Y %H:%M")
+        week_str = (datetime.now()+timedelta(days=7)).strftime("%d/%m/%Y %H:%M")
         week = datetime.strptime(week_str, "%d/%m/%Y %H:%M")
-        month_str = (datetime.now()+timedelta(days=40)).strftime("%d/%m/%Y %H:%M")
+        month_str = (datetime.now()+timedelta(days=31)).strftime("%d/%m/%Y %H:%M")
         month = datetime.strptime(month_str, "%d/%m/%Y %H:%M")
         for event in event_list:
             if not event.get("start_date"):
