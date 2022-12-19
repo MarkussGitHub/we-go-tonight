@@ -379,9 +379,8 @@ def event_details(update: Update, context: CallbackContext) -> int:
 
 def event_details_from_search(update: Update, context: CallbackContext) -> int:
     message = update.callback_query
-    event_name = message.data.split("-")[1]
+    event_name = message.data.split("-", 1)[1]
     message.answer()
-
     for event in context.chat_data["found_events"]:
         if event["event_name"] == event_name:
             event, location = prepare_event_details(event)
@@ -470,7 +469,7 @@ def get_searched_data(update: Update, context: CallbackContext) -> None:
         for option in res:
             date_key, ctgry_name, event_to_find = find_event(option[0], raw_events)
             for event in raw_events[date_key][ctgry_name]:
-                if event["full_event_name"] == event_to_find:
+                if event["event_name"] == event_to_find:
                     context.chat_data["found_events"].append(event)
                     break
             keyboard.append([InlineKeyboardButton(event_to_find, callback_data=f"searchdetails-{event_to_find}")])
