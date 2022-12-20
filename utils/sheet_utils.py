@@ -76,7 +76,7 @@ class SheetManager:
             else:
                 start_date = datetime.strptime(event["start_date"], "%d/%m/%Y %H:%M")
 
-            if start_date == today:
+            if start_date.date() == today.date():
                 result["events"]["today"][event["event_type"]].append(event)
 
             if start_date <= week and start_date >= today:
