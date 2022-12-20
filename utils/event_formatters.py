@@ -1,5 +1,11 @@
 from copy import deepcopy
 
+def escape_characters(text: str) -> str:
+    for symbol in ["_", "*", "`", "["]:
+        text = text.replace(symbol, f"\{symbol}")
+
+    return text
+
 def prepare_event_details(raw_event):
     key_name_mapping = {
         "location": "Location",
@@ -54,7 +60,7 @@ def prepare_event_details(raw_event):
             location["link"] = value
             continue
         if key == "event_desc":
-            event += f"{value}\n"
+            event += f"{escape_characters(value)}\n"
             continue
         event += f'{key_name_mapping[key]}: {value}\n'
 

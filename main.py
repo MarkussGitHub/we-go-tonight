@@ -125,7 +125,7 @@ def event_type(update: Update, context: CallbackContext) -> int:
     message.answer()
 
     keyboard = [
-        [InlineKeyboardButton("🎸 Concerts/Parties 🎉", callback_data="Concerts/Parties")],
+        [InlineKeyboardButton("​​​​​​​​​​​🎸 Concerts/Parties 🎉", callback_data="Concerts/Parties")],
         [InlineKeyboardButton("⛩️ Culture 🗽", callback_data="Culture")],
         [InlineKeyboardButton("🧩 Workshop 🛍️", callback_data="Workshop")],
         [InlineKeyboardButton("🍱 Food/Drinks 🥂", callback_data="Food/Drinks")],
@@ -248,6 +248,28 @@ def help(update: Update, context: CallbackContext) -> int:
 
 #     return "END_ROUTES"
 
+def add_buttons(
+    counter, 
+    keyboard, 
+    increment, 
+    event_group, 
+    selected_event_type
+):
+    if counter != 0 and counter+increment != len(event_group):
+        keyboard[-1:1] = [
+            [
+                InlineKeyboardButton("⬅️", callback_data=f"{selected_event_type}-{counter-7}"),
+                InlineKeyboardButton("➡️", callback_data=f"{selected_event_type}-{counter+increment}")
+            ]
+        ]
+
+    if counter != 0 and counter+increment >= len(event_group):
+        keyboard[-1:1] = [[InlineKeyboardButton("⬅️", callback_data=f"{selected_event_type}-{counter-7}")]]
+
+    if counter == 0 and counter+increment < len(event_group):
+        keyboard[-1:1] = [[InlineKeyboardButton("➡️", callback_data=f"{selected_event_type}-{counter+increment}")]]
+
+    return keyboard, counter
 
 def event_list(update: Update, context: CallbackContext) -> int:
     """Event list for selected type"""
@@ -264,20 +286,16 @@ def event_list(update: Update, context: CallbackContext) -> int:
             counter = 0
         selected_event_type = selected_event_type.split("-")[0]
 
-    keyboard = [
-        [],
-        [
-            InlineKeyboardButton("📄 Event Menu", callback_data="event_type"),
-            InlineKeyboardButton("❌ Cancel", callback_data="end"),
-        ],
-    ]
+    keyboard = [[]]
 
     with open("data/event_list.json", "r") as f:
         jzon = json.load(f)
         event_group = jzon["events"][context.user_data["date"]][selected_event_type]
-    
+
     try:
-        keyboard.insert(0, [InlineKeyboardButton(event_group[counter]["event_name"], callback_data=f"details-{selected_event_type}-{counter}-{counter}")])
+        date = event_group[counter]["start_date"].split(" ")[0]
+        keyboard.insert(-1, [InlineKeyboardButton(f"📅 {date}", callback_data="placeholder")])
+        keyboard.insert(-1, [InlineKeyboardButton(event_group[counter]["event_name"], callback_data=f"details-{selected_event_type}-{counter}-{counter}")])
     except IndexError:
         context.chat_data["message"] = message.message
 
@@ -297,31 +315,26 @@ def event_list(update: Update, context: CallbackContext) -> int:
 
         return "START_ROUTES"
 
-    for increment in range(1, 11):
-        try:
-            keyboard.insert(0, [InlineKeyboardButton(event_group[counter+increment]["event_name"], callback_data=f"details-{selected_event_type}-{counter+increment}-{counter}")])
-        except IndexError:
-            sorted_buttons = keyboard[:increment+1][::-1]
-            keyboard[:increment+1] = sorted_buttons
-            if counter != 0:
-                keyboard[-1:1] = [[InlineKeyboardButton("⬅️", callback_data=f"{selected_event_type}-{counter-10}")]]
-            
-            counter += increment
+    last_date = date
 
-            if counter != len(event_group):
-                keyboard[len(keyboard)-2].append(InlineKeyboardButton("➡️", callback_data=f"{selected_event_type}-{counter}"))
-
+    for increment in range(1, 10):
+        if len(keyboard) >= 10:
+            keyboard, counter = add_buttons(counter, keyboard, increment, event_group, selected_event_type)
             break
-        if increment == 10:
-            sorted_buttons = keyboard[:increment+1][::-1]
-            keyboard[:increment+1] = sorted_buttons
-            if counter != 0:
-                keyboard[-1:1] = [[InlineKeyboardButton("⬅️", callback_data=f"{selected_event_type}-{counter-10}")]]
-
-            counter += increment
-
-            if counter != len(event_group):
-                keyboard[len(keyboard)-2].append(InlineKeyboardButton("➡️", callback_data=f"{selected_event_type}-{counter}"))
+        try:
+            current_date = event_group[counter+increment]["start_date"].split(" ")[0]
+            if datetime.strptime(last_date, "%d/%m/%Y") < datetime.strptime(current_date, "%d/%m/%Y"):
+                keyboard.insert(-1, [InlineKeyboardButton(f"📅 {current_date}", callback_data=f"placeholder")])
+                last_date = current_date
+            if len(keyboard) == 10:
+                keyboard[-1:1] = [[InlineKeyboardButton(event_group[counter+increment]["event_name"], callback_data=f"details-{selected_event_type}-{counter+increment}-{counter}")]]
+            else:
+                keyboard.insert(-1, [InlineKeyboardButton(event_group[counter+increment]["event_name"], callback_data=f"details-{selected_event_type}-{counter+increment}-{counter}")])
+        except IndexError:
+            keyboard, counter = add_buttons(counter, keyboard, increment, event_group, selected_event_type)
+            break
+        if increment == 9:
+            keyboard, counter = add_buttons(counter, keyboard, increment, event_group, selected_event_type)
 
     event_type_emoji_mapping = {
         "Concerts/Parties": "🎸 Concerts/Parties 🎉",
@@ -331,6 +344,11 @@ def event_list(update: Update, context: CallbackContext) -> int:
         "Art/Literature": "🎨 Art/Literature 📚",
         "Theatre/Stand up": "🎭 Theatre/Stand up 🎤",
     }
+
+    keyboard.insert(-1, [
+            InlineKeyboardButton("📄 Event Menu", callback_data="event_type"),
+            InlineKeyboardButton("❌ Cancel", callback_data="end"),
+        ])
 
     message.edit_message_text(
         text=event_type_emoji_mapping.get(selected_event_type),
