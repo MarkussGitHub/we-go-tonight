@@ -369,8 +369,11 @@ def event_details(update: Update, context: CallbackContext) -> int:
         ],
     ]
 
-    if location:
+    if location and location.get("link"):
         keyboard[0].append(InlineKeyboardButton(text=f'📍 {location["name"]}', url=location["link"]))
+
+    elif location and not location.get("link"):
+        keyboard[0].append(InlineKeyboardButton(text=f'📍 {location["name"]}', callback_data="placeholder"))
 
     message.edit_message_text(
         text=(event),
@@ -392,8 +395,11 @@ def event_details_from_search(update: Update, context: CallbackContext) -> int:
 
     keyboard = [[]]
 
-    if location:
+    if location and location.get("link"):
         keyboard[0].append(InlineKeyboardButton(text=f'📍 {location["name"]}', url=location["link"]))
+
+    elif location and not location.get("link"):
+        keyboard[0].append(InlineKeyboardButton(text=f'📍 {location["name"]}', callback_data="placeholder"))
 
     message.edit_message_text(
         text=(event),
@@ -450,8 +456,11 @@ def get_searched_data(update: Update, context: CallbackContext) -> None:
                 event, location = prepare_event_details(event)
                 break
         
-        if location:
-            keyboard[0].append(InlineKeyboardButton(text=f'📍 {location["name"]}', url=location["link"]))
+    if location and location.get("link"):
+        keyboard[0].append(InlineKeyboardButton(text=f'📍 {location["name"]}', url=location["link"]))
+
+    elif location and not location.get("link"):
+        keyboard[0].append(InlineKeyboardButton(text=f'📍 {location["name"]}', callback_data="placeholder"))
 
         update.message.bot.send_message(
             update.effective_user.id,
