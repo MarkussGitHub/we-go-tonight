@@ -139,20 +139,6 @@ def event_type(update: Update, context: CallbackContext) -> int:
     )
     return "START_ROUTES"
 
-
-def help(update: Update, context: CallbackContext) -> int:
-    """Help with return to start"""
-    message = update.callback_query
-    message.answer()
-
-    keyboard = [[InlineKeyboardButton("Start", callback_data=str(event_type))]]
-
-    message.edit_message_text(
-        text="Hey, I am here to help, these are the commands you can write - ",
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
-    return "START_ROUTES"
-
 # OLD EVENT LIST
 # def event_list(update: Update, context: CallbackContext) -> int:
 #     """Event list for selected type"""
@@ -431,14 +417,6 @@ def end(update: Update, context: CallbackContext) -> int:
         text="Cheers! I hope you will use our services again")
     return ConversationHandler.END
 
-
-def help_command(update: Update, context: CallbackContext) -> None:
-    """Send a message when the command /help is issued."""
-    update.message.reply_markdown(
-        text=f"We have the following commands in order - !",
-        reply_markup=ReplyKeyboardRemove(),
-    )
-
 def search_by_name_start(update: Update, context: CallbackContext) -> None:
     """Search by name for user input"""
     update.message.bot.send_message(
@@ -663,7 +641,6 @@ def main() -> None:
             "START_ROUTES": [
                 CallbackQueryHandler(start, pattern="^start$"),
                 CallbackQueryHandler(event_type, pattern="^" + event_type_pattern + "$"),
-                CallbackQueryHandler(help, pattern="^help$"),
                 CallbackQueryHandler(event_list, pattern="^" + event_types + "$"),
                 CallbackQueryHandler(end, pattern="^end$"),
             ],
@@ -739,7 +716,6 @@ def main() -> None:
     
     # on different commands - answer in Telegram
     dispatcher.add_handler(CommandHandler("start", start))
-    dispatcher.add_handler(CommandHandler("help", help_command))
     dispatcher.add_handler(CommandHandler("pushadvert", pushadvert))
     dispatcher.add_handler(CommandHandler("approve", approval))
     dispatcher.add_handler(CommandHandler("deny", denial))
