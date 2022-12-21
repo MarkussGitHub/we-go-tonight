@@ -75,6 +75,25 @@ class SheetManager:
 
             else:
                 start_date = datetime.strptime(event["start_date"], "%d/%m/%Y %H:%M")
+            
+            if event.get("end_date"):
+                end_date = datetime.strptime(event["end_date"], "%d/%m/%Y %H:%M")
+                ongoing_date = start_date
+                while not (end_date.date() == ongoing_date.date()):
+                    ev_copy = deepcopy(event)
+                    ev_copy["start_date"] = ongoing_date.strftime("%d/%m/%Y %H:%M")
+
+                    if ongoing_date.date() == today.date():
+                        result["events"]["today"][event["event_type"]].append(ev_copy)
+
+                    if ongoing_date <= week and ongoing_date >= today:
+                        result["events"]["week"][ev_copy["event_type"]].append(ev_copy)
+
+                    if ongoing_date <= month and ongoing_date >= today:
+                        result["events"]["month"][event["event_type"]].append(ev_copy)
+
+                    ongoing_date += timedelta(days=1)
+
 
             if start_date.date() == today.date():
                 result["events"]["today"][event["event_type"]].append(event)
