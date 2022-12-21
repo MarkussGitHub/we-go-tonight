@@ -5,6 +5,12 @@ import logging
 import yaml
 import pytz
 from thefuzz import process
+from gettext import gettext, translation
+
+el = translation('base', localedir='locale', languages=['lv'])
+
+el.install()
+_ = el.gettext
 
 from datetime import datetime, timedelta, time
 from telegram import (
@@ -52,8 +58,10 @@ db = DBManager(host, dbname, user, password, port)
 sheet = SheetManager(client_id, client_secret)
 
 
+
 def start(update: Update, context: CallbackContext) -> int:
     """Send message on `/start`."""
+    print(_("When would you like to go?"))
     if update.message:
         message_date = update.message.date.strftime("%Y-%m-%d %H:%M:%S")
         current_date = datetime.utcnow()-timedelta(minutes=1)
@@ -74,22 +82,22 @@ def start(update: Update, context: CallbackContext) -> int:
         edit_msg = True
 
     keyboard = [
-        [InlineKeyboardButton("Today", callback_data="today")],
-        [InlineKeyboardButton("This week", callback_data="week")],
-        [InlineKeyboardButton("This month", callback_data="month")],
+        [InlineKeyboardButton(_("Today"), callback_data="today")],
+        [InlineKeyboardButton(_("This week"), callback_data="week")],
+        [InlineKeyboardButton(_("This month"), callback_data="month")],
     ]
 
     if edit_msg:
         message = update.callback_query
         message.answer()
         message.edit_message_text(
-            text="When would you like to go?",
+            text=_("When would you like to go?"),
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
 
     else:
         update.message.reply_text(
-            text="When would you like to go?",
+            text=_("When would you like to go?"),
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
 
