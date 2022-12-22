@@ -81,16 +81,17 @@ class SheetManager:
                 ongoing_date = start_date
                 while not (end_date.date() == ongoing_date.date()):
                     ev_copy = deepcopy(event)
+                    open_during = ev_copy.get("open_during", []).split(", ")
                     ev_copy["start_date"] = ongoing_date.strftime("%d/%m/%Y %H:%M")
+                    if str(ongoing_date.weekday() + 1) in open_during:
+                        if ongoing_date.date() == today.date():
+                            result["events"]["today"][event["event_type"]].append(ev_copy)
 
-                    if ongoing_date.date() == today.date():
-                        result["events"]["today"][event["event_type"]].append(ev_copy)
+                        if ongoing_date <= week and ongoing_date >= today:
+                            result["events"]["week"][ev_copy["event_type"]].append(ev_copy)
 
-                    if ongoing_date <= week and ongoing_date >= today:
-                        result["events"]["week"][ev_copy["event_type"]].append(ev_copy)
-
-                    if ongoing_date <= month and ongoing_date >= today:
-                        result["events"]["month"][event["event_type"]].append(ev_copy)
+                        if ongoing_date <= month and ongoing_date >= today:
+                            result["events"]["month"][event["event_type"]].append(ev_copy)
 
                     ongoing_date += timedelta(days=1)
 
