@@ -433,6 +433,7 @@ def search_by_name_start(update: Update, context: CallbackContext) -> None:
 
 def get_searched_data(update: Update, context: CallbackContext) -> None:
     """Searching for close matches using user inputed name"""
+    location = {}
     with open("data/event_list.json", "r") as f:
         jzon = json.load(f)
         raw_events = jzon["events"]
