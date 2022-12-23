@@ -59,6 +59,7 @@ class DBManager:
             "telegram_user_id": raw[3],
             "refered_by": raw[4],
             "is_staff": raw[5],
+            "lang": raw[6],
         }
 
     def _convert_advert_to_dict(self, raw):
@@ -71,7 +72,7 @@ class DBManager:
             "owner_id": raw[4],
         }
 
-    def create_account(self, telegram_user, ref):
+    def create_account(self, telegram_user, ref=None):
         """Creates new account in db."""
         telegram_name = telegram_user.first_name
         telegram_user_id = telegram_user.id
@@ -165,3 +166,13 @@ class DBManager:
         if raw_result:
             result = self._convert_account_to_dict(raw_result)
             return result
+
+    def update_selected_lang(self, user, lang):
+        """Updates user language in db."""
+        sql_query = """UPDATE account
+            SET lang = %s
+            WHERE telegram_user_id = %s"""
+        data = (lang, str(user),)
+        self.cursor.execute(sql_query, data)
+
+        self.conn.commit()

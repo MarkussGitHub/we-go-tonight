@@ -5,12 +5,6 @@ import logging
 import yaml
 import pytz
 from thefuzz import process
-from gettext import gettext, translation
-
-el = translation('base', localedir='locale', languages=['lv'])
-
-el.install()
-_ = el.gettext
 
 from datetime import datetime, timedelta, time
 from telegram import (
@@ -32,6 +26,7 @@ from telegram.ext import (
 from utils.db_utils import DBManager
 from utils.event_formatters import prepare_event_details, find_event
 from utils.sheet_utils import SheetManager
+from utils.translations import translate as _
 
 with open("settings.local.yaml", "r") as f:
     config = yaml.load(f, Loader=yaml.FullLoader)
@@ -57,11 +52,29 @@ client_secret = config["GOOGLE_CLIENT_SECRET"]
 db = DBManager(host, dbname, user, password, port)
 sheet = SheetManager(client_id, client_secret)
 
-
-
 def start(update: Update, context: CallbackContext) -> int:
     """Send message on `/start`."""
-    print(_("When would you like to go?"))
+    if update.callback_query:
+        lang = update.callback_query.data
+        user = {
+            "id": update.callback_query.message.chat_id
+        }
+        if db.get_account(user.get("id")).get("lang") is None:
+            db.update_selected_lang(user.get("id"), lang)
+
+        lang_mapping = {
+            "en": "🇬🇧",
+            "lv": "🇱🇻",
+            "ru": "🇷🇺"
+        }
+
+        context.bot.send_message(
+            update.effective_user.id,
+            text=f"You have selected {lang_mapping.get(lang)} as your preferred language, you can always change it using /settings command.",
+        )
+
+        return ConversationHandler.END
+
     if update.message:
         message_date = update.message.date.strftime("%Y-%m-%d %H:%M:%S")
         current_date = datetime.utcnow()-timedelta(minutes=1)
@@ -74,30 +87,50 @@ def start(update: Update, context: CallbackContext) -> int:
 
         referal = context.args[0] if context.args else None
         if db.get_account(user.id) is None:
+            keyboard = [
+                [
+                    InlineKeyboardButton("🇬🇧", callback_data="en"),
+                    InlineKeyboardButton("🇱🇻", callback_data="lv"),
+                    InlineKeyboardButton("🇷🇺", callback_data="ru"),
+                ]
+            ]
+            update.message.reply_text(
+                text="Please select your preferred language",
+                reply_markup=InlineKeyboardMarkup(keyboard),
+            )
             db.create_account(user, referal)
+
+            return "START_ROUTES"
         edit_msg = False
 
-    else:
+    elif context.chat_data.get("message"):
         update.message = context.chat_data["message"]
         edit_msg = True
 
+    else:
+        edit_msg = True
+    
+    if not context.chat_data.get("lang"):
+        context.chat_data["lang"] = db.get_account(user["id"])["lang"]
+    lang = context.chat_data["lang"]
+
     keyboard = [
-        [InlineKeyboardButton(_("Today"), callback_data="today")],
-        [InlineKeyboardButton(_("This week"), callback_data="week")],
-        [InlineKeyboardButton(_("This month"), callback_data="month")],
+        [InlineKeyboardButton(_("Today", lang), callback_data="today")],
+        [InlineKeyboardButton(_("This week", lang), callback_data="week")],
+        [InlineKeyboardButton(_("This month", lang), callback_data="month")],
     ]
 
     if edit_msg:
         message = update.callback_query
         message.answer()
         message.edit_message_text(
-            text=_("When would you like to go?"),
+            text=_("When would you like to go?", context.chat_data["lang"]),
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
 
     else:
         update.message.reply_text(
-            text=_("When would you like to go?"),
+            text=_("When would you like to go?", context.chat_data["lang"]),
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
 
@@ -107,15 +140,16 @@ def start(update: Update, context: CallbackContext) -> int:
 def start_over(update: Update, context: CallbackContext) -> int:
     """Prompt same text & keyboard as `event_type` does but not as new message"""
     message = update.callback_query
+    lang = context.chat_data["lang"]
     message.answer()
 
     keyboard = [
-        [InlineKeyboardButton("🎸 Concerts/Parties 🎉", callback_data="Concerts/Parties")],
-        [InlineKeyboardButton("⛩️ Culture 🗽", callback_data="Culture")],
-        [InlineKeyboardButton("🧩 Workshop 🛍️", callback_data="Workshop")],
-        [InlineKeyboardButton("🍱 Food/Drinks 🥂", callback_data="Food/Drinks")],
-        [InlineKeyboardButton("🎨 Art/Literature 📚", callback_data="Art/Literature")],
-        [InlineKeyboardButton("🎭 Theatre/Stand up 🎤", callback_data="Theatre/Stand up")],
+        [InlineKeyboardButton(f"🎸 {_('Concerts/Parties', lang)} 🎉", callback_data="Concerts/Parties")],
+        [InlineKeyboardButton(f"⛩️ {_('Culture', lang)} 🗽", callback_data="Culture")],
+        [InlineKeyboardButton(f"🧩 {_('Workshop', lang)} 🛍️", callback_data="Workshop")],
+        [InlineKeyboardButton(f"🍱 {_('Food/Drinks', lang)} 🥂", callback_data="Food/Drinks")],
+        [InlineKeyboardButton(f"🎨 {_('Art/Literature', lang)} 📚", callback_data="Art/Literature")],
+        [InlineKeyboardButton(f"🎭 {_('Theatre/Stand up', lang)} 🎤", callback_data="Theatre/Stand up")],
     ]
 
     message.edit_message_text(
@@ -128,119 +162,26 @@ def start_over(update: Update, context: CallbackContext) -> int:
 def event_type(update: Update, context: CallbackContext) -> int:
     """Event type menu"""
     message = update.callback_query
+    lang = context.chat_data["lang"]
     if message.data in ["today", "week", "month"]:
         context.user_data["date"] = message.data
     message.answer()
 
     keyboard = [
-        [InlineKeyboardButton("​​​​​​​​​​​🎸 Concerts/Parties 🎉", callback_data="Concerts/Parties")],
-        [InlineKeyboardButton("⛩️ Culture 🗽", callback_data="Culture")],
-        [InlineKeyboardButton("🧩 Workshop 🛍️", callback_data="Workshop")],
-        [InlineKeyboardButton("🍱 Food/Drinks 🥂", callback_data="Food/Drinks")],
-        [InlineKeyboardButton("🎨 Art/Literature 📚", callback_data="Art/Literature")],
-        [InlineKeyboardButton("🎭 Theatre/Stand up 🎤", callback_data="Theatre/Stand up")],
+        [InlineKeyboardButton(f"🎸 {_('Concerts/Parties', lang)} 🎉", callback_data="Concerts/Parties")],
+        [InlineKeyboardButton(f"⛩️ {_('Culture', lang)} 🗽", callback_data="Culture")],
+        [InlineKeyboardButton(f"🧩 {_('Workshop', lang)} 🛍️", callback_data="Workshop")],
+        [InlineKeyboardButton(f"🍱 {_('Food/Drinks', lang)} 🥂", callback_data="Food/Drinks")],
+        [InlineKeyboardButton(f"🎨 {_('Art/Literature', lang)} 📚", callback_data="Art/Literature")],
+        [InlineKeyboardButton(f"🎭 {_('Theatre/Stand up', lang)} 🎤", callback_data="Theatre/Stand up")],
     ]
 
     message.edit_message_text(
-        text="Here are the types of Events I can offer to you or you can choose Any if you are feeling adventurous",
+        text=_("Here are the types of Events I can offer to you", lang),
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
     return "START_ROUTES"
 
-# OLD EVENT LIST
-# def event_list(update: Update, context: CallbackContext) -> int:
-#     """Event list for selected type"""
-#     message = update.callback_query
-#     selected_event_type = message.data
-#     message.answer()
-
-#     if "-" not in selected_event_type:
-#         counter = 0
-#     else:
-#         try:
-#             counter = int(selected_event_type.split("-")[1])
-#             counter = counter+1
-#         except ValueError:
-#             counter = 0
-#         selected_event_type = selected_event_type.split("-")[0]
-
-#     keyboard = [
-#         [],
-#         [],
-#         [
-#             InlineKeyboardButton("📄 Event Menu", callback_data="event_type"),
-#             InlineKeyboardButton("❌ Cancel", callback_data="end"),
-#         ]
-#     ]
-
-#     with open("data/event_list.json", "r") as f:
-#         jzon = json.load(f)
-#         event_group = jzon["events"][context.user_data["date"]][selected_event_type]
-
-#     try:
-#         first_event = (
-#             f'1️⃣ *{event_group[counter]["event_name"]}*\n\n'
-#             f'Description:  {event_group[counter]["event_desc"]}\n'
-#             f'Start Date:  {event_group[counter]["start_date"]}\n\n'
-#         )
-#         keyboard[0].append(InlineKeyboardButton("1️⃣", callback_data=f"details-{selected_event_type}-{counter}"))
-#     except IndexError:
-#         context.bot_data["message"] = message.message
-
-#         keyboard = [
-#             [InlineKeyboardButton("📅 Choose other date", callback_data="start")],
-#             [
-#                 InlineKeyboardButton("📄 Event Menu", callback_data="event_type"),
-#                 InlineKeyboardButton("❌ Cancel", callback_data="end"),
-#             ]
-#         ]
-
-#         message.edit_message_text(
-#             text="Sadly there are no events in this category for selected date 😔",
-#             reply_markup=InlineKeyboardMarkup(keyboard),
-#             parse_mode=ParseMode.MARKDOWN,
-#         )
-
-#         return "START_ROUTES"
-
-#     if counter+1 <= len(event_group)-1:
-#         second_event = (
-#             f'2️⃣ *{event_group[counter+1]["event_name"]}*\n\n'
-#             f'Description:  {event_group[counter+1]["event_desc"]}\n'
-#             f'Start Date:  {event_group[counter+1]["start_date"]}\n\n'
-#         )
-#         keyboard[0].append(InlineKeyboardButton("2️⃣", callback_data=f"details-{selected_event_type}-{counter+1}"))
-#     else:
-#         second_event = ""
-
-#     if counter+2 <= len(event_group)-1:
-#         third_event = (
-#             f'3️⃣ *{event_group[counter+2]["event_name"]}*\n\n'
-#             f'Description:  {event_group[counter+2]["event_desc"]}\n'
-#             f'Start Date:  {event_group[counter+2]["start_date"]}\n\n'
-#         )
-#         keyboard[0].append(InlineKeyboardButton("3️⃣", callback_data=f"details-{selected_event_type}-{counter+2}"))
-#     else:
-#         third_event = ""
-
-#     events_to_display = first_event + second_event + third_event
-#     events_array = [first_event, second_event, third_event]
-#     last_in_list = events_array.index(max(events_array))
-
-#     if counter != 0:
-#         keyboard[1].append(InlineKeyboardButton("⬅️", callback_data=f"{selected_event_type}-{counter-4}"))
-
-#     if counter+last_in_list != len(event_group)-1:
-#         keyboard[1].append(InlineKeyboardButton("➡️", callback_data=f"{selected_event_type}-{counter+2}"))
-
-#     message.edit_message_text(
-#         text=(events_to_display),
-#         reply_markup=InlineKeyboardMarkup(keyboard),
-#         parse_mode=ParseMode.MARKDOWN,
-#         disable_web_page_preview=True,
-#     )
-
-#     return "END_ROUTES"
 
 def add_buttons(
     counter, 
@@ -265,10 +206,12 @@ def add_buttons(
 
     return keyboard, counter
 
+
 def event_list(update: Update, context: CallbackContext) -> int:
     """Event list for selected type"""
     message = update.callback_query
     selected_event_type = message.data
+    lang = context.chat_data["lang"]
     message.answer()
 
     if "-" not in selected_event_type:
@@ -294,15 +237,15 @@ def event_list(update: Update, context: CallbackContext) -> int:
         context.chat_data["message"] = message.message
 
         keyboard = [
-            [InlineKeyboardButton("📅 Choose other date", callback_data="start")],
+            [InlineKeyboardButton(f"📅 {_('Choose other date', lang)}", callback_data="start")],
             [
-                InlineKeyboardButton("📄 Event Menu", callback_data="event_type"),
-                InlineKeyboardButton("❌ Cancel", callback_data="end"),
+                InlineKeyboardButton(f"📄 {_('Event Menu', lang)}", callback_data="event_type"),
+                InlineKeyboardButton(f"❌ {_('Cancel', lang)}", callback_data="end"),
             ]
         ]
 
         message.edit_message_text(
-            text="Sadly there are no events in this category for selected date 😔",
+            text=_("Sadly there are no events in this category for selected date", lang) + "😔",
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode=ParseMode.MARKDOWN,
         )
@@ -331,17 +274,17 @@ def event_list(update: Update, context: CallbackContext) -> int:
             keyboard, counter = add_buttons(counter, keyboard, increment, event_group, selected_event_type)
 
     event_type_emoji_mapping = {
-        "Concerts/Parties": "🎸 Concerts/Parties 🎉",
-        "Culture": "⛩️ Culture 🗽",
-        "Workshop": "🧩 Workshop 🛍️",
-        "Food/Drinks": "🍱 Food/Drinks 🥂",
-        "Art/Literature": "🎨 Art/Literature 📚",
-        "Theatre/Stand up": "🎭 Theatre/Stand up 🎤",
+        "Concerts/Parties": f"🎸 {_('Concerts/Parties', lang)} 🎉",
+        "Culture": f"⛩️ {_('Culture', lang)} 🗽",
+        "Workshop": f"🧩 {_('Workshop', lang)} 🛍️",
+        "Food/Drinks": f"🍱 {_('Food/Drinks', lang)} 🥂",
+        "Art/Literature": f"🎨 {_('Art/Literature', lang)} 📚",
+        "Theatre/Stand up": f"🎭 {_('Theatre/Stand up', lang)} 🎤",
     }
 
     keyboard.insert(-1, [
-            InlineKeyboardButton("📄 Event Menu", callback_data="event_type"),
-            InlineKeyboardButton("❌ Cancel", callback_data="end"),
+            InlineKeyboardButton(f"📄 {_('Event Menu', lang)}", callback_data="event_type"),
+            InlineKeyboardButton(f"❌ {_('Cancel', lang)}", callback_data="end"),
         ])
 
     message.edit_message_text(
@@ -353,8 +296,10 @@ def event_list(update: Update, context: CallbackContext) -> int:
 
     return "END_ROUTES"
 
+
 def event_details(update: Update, context: CallbackContext) -> int:
     message = update.callback_query
+    lang = context.chat_data["lang"]
     selected_event_type = message.data.split("-")[1]
     counter = int(message.data.split("-")[2])
     page_counter = int(message.data.split("-")[3])
@@ -369,11 +314,11 @@ def event_details(update: Update, context: CallbackContext) -> int:
     keyboard = [
         [],
         [
-            InlineKeyboardButton("Back", callback_data=f"{selected_event_type}-{page_counter}"),
+            InlineKeyboardButton(_("Back", lang), callback_data=f"{selected_event_type}-{page_counter}"),
         ],
         [
-            InlineKeyboardButton("📄 Event Menu", callback_data="event_type"),
-            InlineKeyboardButton("❌ Cancel", callback_data="end"),
+            InlineKeyboardButton(f"📄 {_('Event Menu', lang)}", callback_data="event_type"),
+            InlineKeyboardButton(f"❌ {_('Cancel', lang)}", callback_data="end"),
         ],
     ]
 
@@ -426,21 +371,27 @@ def end(update: Update, context: CallbackContext) -> int:
     called at the end of every type of event
     """
     message = update.callback_query
+    lang = context.chat_data["lang"]
     message.answer()
     message.edit_message_text(
-        text="Cheers! I hope you will use our services again")
+        text=_("I hope you will use our services again", lang))
     return ConversationHandler.END
 
 def search_by_name_start(update: Update, context: CallbackContext) -> None:
     """Search by name for user input"""
+    if not context.chat_data.get("lang"):
+        context.chat_data["lang"] = db.get_account(update.effective_user.id)["lang"]
+    lang = context.chat_data["lang"]
     update.message.bot.send_message(
         update.effective_user.id,
-        text = "What are you looking for?"
+        text=_("What are you looking for?", lang)
     )
     return "SEARCH"
 
+
 def get_searched_data(update: Update, context: CallbackContext) -> None:
     """Searching for close matches using user inputed name"""
+    lang = context.chat_data["lang"]
     with open("data/event_list.json", "r") as f:
         jzon = json.load(f)
         raw_events = jzon["events"]
@@ -464,11 +415,11 @@ def get_searched_data(update: Update, context: CallbackContext) -> None:
                 event, location = prepare_event_details(event)
                 break
         
-    if location and location.get("link"):
-        keyboard[0].append(InlineKeyboardButton(text=f'📍 {location["name"]}', url=location["link"]))
+        if location and location.get("link"):
+            keyboard[0].append(InlineKeyboardButton(text=f'📍 {location["name"]}', url=location["link"]))
 
-    elif location and not location.get("link"):
-        keyboard[0].append(InlineKeyboardButton(text=f'📍 {location["name"]}', callback_data="placeholder"))
+        elif location and not location.get("link"):
+            keyboard[0].append(InlineKeyboardButton(text=f'📍 {location["name"]}', callback_data="placeholder"))
 
         update.message.bot.send_message(
             update.effective_user.id,
@@ -489,7 +440,7 @@ def get_searched_data(update: Update, context: CallbackContext) -> None:
 
         update.message.bot.send_message(
             update.effective_user.id,
-            text="Here are events that i could find",
+            text=_("Here are events that i could find", lang),
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode=ParseMode.MARKDOWN,
         )
@@ -562,7 +513,7 @@ def push_to_group(update: Update, context: CallbackContext) -> int:
               "\nYou're welcome!")
     )
     
-    group_id = -1001792279795
+    group_id = -1001535413676
     update.message.bot.copy_message(
         group_id,
         advert_owner.get("telegram_user_id"),
@@ -632,6 +583,59 @@ def event_list_updater(update: Update) -> None:
     sheet.get_sheet()
     return
 
+def settings(update: Update, context: CallbackContext) -> int:
+    keyboard = [
+        [InlineKeyboardButton("Language", callback_data="edit_language")]
+    ]
+
+    context.bot.send_message(
+        update.effective_chat.id,
+        text="Settings: ",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+    )
+    return "SELECTED"
+
+def edit_language(update: Update, context: CallbackContext) -> int:
+    keyboard = [
+        [
+            InlineKeyboardButton("🇬🇧", callback_data="new-en"),
+            InlineKeyboardButton("🇱🇻", callback_data="new-lv"),
+            InlineKeyboardButton("🇷🇺", callback_data="new-ru"),
+        ]
+    ]
+
+    context.bot.send_message(
+        update.effective_chat.id,
+        text="Please select your preferred language",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+    )
+
+    return "SELECTED"
+
+def save_language(update: Update, context: CallbackContext) -> int:
+    lang = update.callback_query.data.split("-")[1]
+    if db.get_account(update.effective_user.id):
+        db.update_selected_lang(update.effective_user.id, lang)
+
+    else:
+        db.create_account(update.effective_user)
+        db.update_selected_lang(update.effective_user.id, lang)
+
+    lang_mapping = {
+        "en": "🇬🇧",
+        "lv": "🇱🇻",
+        "ru": "🇷🇺"
+    }
+
+    context.chat_data["lang"] = lang
+
+    context.bot.send_message(
+        update.effective_user.id,
+        text=f"You have selected {lang_mapping.get(lang)} as your preferred language, you can always change it using /settings command.",
+    )
+
+    return ConversationHandler.END
+
 def main() -> None:
     """Start the bot."""
     # Create the Updater and pass it your bot's token.
@@ -656,7 +660,7 @@ def main() -> None:
         entry_points=[CommandHandler("start", start)],
         states={
             "START_ROUTES": [
-                CallbackQueryHandler(start, pattern="^start$"),
+                CallbackQueryHandler(start, pattern="^start$|^lv$|^en$|^ru$"),
                 CallbackQueryHandler(event_type, pattern="^" + event_type_pattern + "$"),
                 CallbackQueryHandler(event_list, pattern="^" + event_types + "$"),
                 CallbackQueryHandler(end, pattern="^end$"),
@@ -724,19 +728,30 @@ def main() -> None:
         name="search",
         allow_reentry=True
     )
+    settings_handler = ConversationHandler(
+        entry_points=[CommandHandler("settings", settings)],
+        states={
+            "SETTINGS": [CallbackQueryHandler(settings, pattern="^settings$"),],
+            "SELECTED": [
+                CallbackQueryHandler(edit_language, pattern="^edit_language$"),
+                CallbackQueryHandler(save_language, pattern="^new-(lv$|en$|ru$)"),
+            ],
+            "END_ROUTES": [CallbackQueryHandler(end, pattern="^end$"),],
+        },
+        fallbacks=[MessageHandler(Filters.regex("^Done$"),start)],
+        name="settings",
+        allow_reentry=True
+    )
+
 
     # Add ConversationHandler to application that will be used for handling updates
     dispatcher.add_handler(conv_handler)
     dispatcher.add_handler(push_handler)
     dispatcher.add_handler(search_handler)
     dispatcher.add_handler(denial_handler)
+    dispatcher.add_handler(settings_handler)
     
     # on different commands - answer in Telegram
-    dispatcher.add_handler(CommandHandler("start", start))
-    dispatcher.add_handler(CommandHandler("pushadvert", pushadvert))
-    dispatcher.add_handler(CommandHandler("approve", approval))
-    dispatcher.add_handler(CommandHandler("deny", denial))
-    dispatcher.add_handler(CommandHandler("search", search_by_name_start))
     dispatcher.add_handler(CommandHandler("update", event_list_manual_update))
     
     # Start the Bot
