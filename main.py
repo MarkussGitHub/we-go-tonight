@@ -60,7 +60,7 @@ def start(update: Update, context: CallbackContext) -> int:
         current_date = current_date.strftime("%Y-%m-%d %H:%M:%S")
         if message_date < current_date:
             return
-
+        
         user = update.message.from_user
         logger.info(f"{user.first_name}, started the conversation. User ID: {user.id}")
 
@@ -72,28 +72,39 @@ def start(update: Update, context: CallbackContext) -> int:
     else:
         update.message = context.chat_data["message"]
         edit_msg = True
-
-    keyboard = [
-        [InlineKeyboardButton("Today", callback_data="today")],
-        [InlineKeyboardButton("This week", callback_data="week")],
-        [InlineKeyboardButton("This month", callback_data="month")],
-    ]
-
-    if edit_msg:
-        message = update.callback_query
-        message.answer()
-        message.edit_message_text(
-            text="When would you like to go?",
-            reply_markup=InlineKeyboardMarkup(keyboard),
-        )
-
+    
+    group_id = -1001617590404
+    checker = update.message.bot.getChatMember(group_id, update.effective_chat.id)
+    
+    if checker["status"] == "left":
+        update.message.bot.send_message(
+        update.effective_chat.id,
+        text = "Please join our telegram group to use the bot, we offer a lot there as well!\nhttps://t.me/wegotonightinriga")
+        
+        return
+    
     else:
-        update.message.reply_text(
-            text="When would you like to go?",
-            reply_markup=InlineKeyboardMarkup(keyboard),
-        )
+        keyboard = [
+            [InlineKeyboardButton("Today", callback_data="today")],
+            [InlineKeyboardButton("This week", callback_data="week")],
+            [InlineKeyboardButton("This month", callback_data="month")],
+        ]
 
-    return "START_ROUTES"
+        if edit_msg:
+            message = update.callback_query
+            message.answer()
+            message.edit_message_text(
+                text="When would you like to go?",
+                reply_markup=InlineKeyboardMarkup(keyboard),
+            )
+
+        else:
+            update.message.reply_text(
+                text="When would you like to go?",
+                reply_markup=InlineKeyboardMarkup(keyboard),
+            )
+
+        return "START_ROUTES"
 
 
 def start_over(update: Update, context: CallbackContext) -> int:
@@ -425,11 +436,21 @@ def end(update: Update, context: CallbackContext) -> int:
 
 def search_by_name_start(update: Update, context: CallbackContext) -> None:
     """Search by name for user input"""
-    update.message.bot.send_message(
-        update.effective_user.id,
-        text = "What are you looking for?"
-    )
-    return "SEARCH"
+    group_id = -1001617590404
+    checker = update.message.bot.getChatMember(group_id, update.effective_chat.id)
+    
+    if checker["status"] == "left":
+        update.message.bot.send_message(
+        update.effective_chat.id,
+        text = "Please join our telegram group to use the bot, we offer a lot there as well!\nhttps://t.me/wegotonightinriga")
+        
+        return
+    else:
+        update.message.bot.send_message(
+            update.effective_user.id,
+            text = "What are you looking for?"
+        )
+        return "SEARCH"
 
 def get_searched_data(update: Update, context: CallbackContext) -> None:
     """Searching for close matches using user inputed name"""
