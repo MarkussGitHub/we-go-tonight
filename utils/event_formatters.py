@@ -18,6 +18,7 @@ def prepare_event_details(raw_event):
     }
 
     KEYS_TO_SKIP = [
+        "open_during",
         "event_name",
         "hyperlink_text",
         "booking_availability",
