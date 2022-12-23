@@ -10,6 +10,7 @@ from commands.advert import denial_handler, push_handler
 from commands.event_menu import conv_handler
 from commands.search import search_handler
 from commands.settings import settings_handler
+from commands.help import help_command
 from utils.sheets_connection import sheet
 
 # Enable logging
@@ -44,6 +45,7 @@ def main() -> None:
 
     # on different commands - answer in Telegram
     dispatcher.add_handler(CommandHandler("update", event_list_manual_update))
+    dispatcher.add_handler(CommandHandler("help", help_command))
 
     # Start the Bot
     updater.start_polling()
