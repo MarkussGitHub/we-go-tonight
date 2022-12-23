@@ -1,5 +1,8 @@
 from copy import deepcopy
 
+from telegram import InlineKeyboardButton
+
+
 def escape_characters(text: str) -> str:
     for symbol in ["_", "*", "`", "["]:
         text = text.replace(symbol, f"\{symbol}")
@@ -75,3 +78,26 @@ def find_event(result, raw_events):
                 for key, value in event.items():
                     if value == result:
                         return date_key, ctgry_name, value
+
+def add_buttons(
+    counter, 
+    keyboard, 
+    increment, 
+    event_group, 
+    selected_event_type
+):
+    if counter != 0 and counter+increment != len(event_group):
+        keyboard[-1:1] = [
+            [
+                InlineKeyboardButton("⬅️", callback_data=f"{selected_event_type}-{counter-7}"),
+                InlineKeyboardButton("➡️", callback_data=f"{selected_event_type}-{counter+increment}")
+            ]
+        ]
+
+    if counter != 0 and counter+increment >= len(event_group):
+        keyboard[-1:1] = [[InlineKeyboardButton("⬅️", callback_data=f"{selected_event_type}-{counter-7}")]]
+
+    if counter == 0 and counter+increment < len(event_group):
+        keyboard[-1:1] = [[InlineKeyboardButton("➡️", callback_data=f"{selected_event_type}-{counter+increment}")]]
+
+    return keyboard, counter

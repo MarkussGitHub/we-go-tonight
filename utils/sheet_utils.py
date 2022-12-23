@@ -1,12 +1,12 @@
-import requests
 import json
 import logging
-import yaml
 from copy import deepcopy
-
-from uuid import uuid4
-from urllib.parse import urlparse, parse_qs
 from datetime import datetime, timedelta
+from urllib.parse import parse_qs, urlparse
+from uuid import uuid4
+
+import requests
+import yaml
 
 logger = logging.getLogger(__name__)
 

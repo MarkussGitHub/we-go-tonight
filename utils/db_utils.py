@@ -1,5 +1,7 @@
+from uuid import UUID, uuid4
+
 import psycopg2
-from uuid import uuid4, UUID
+
 
 class DBManager:
     def __init__(self, host, dbname, user, password, port):
@@ -32,6 +34,8 @@ class DBManager:
             telegram_user_id character varying(256) COLLATE pg_catalog."default" NOT NULL,
             refered_by uuid,
             is_staff boolean NOT NULL DEFAULT false,
+            lang varchar(2),
+            joined_group bool,
             CONSTRAINT user_pkey PRIMARY KEY (id)
         );
 
@@ -198,5 +202,4 @@ class DBManager:
 
         if raw_result:
             result = self._convert_account_to_dict(raw_result)
-            print(result["joined_group"])
             return result["joined_group"]
