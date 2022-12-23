@@ -54,6 +54,18 @@ sheet = SheetManager(client_id, client_secret)
 
 def start(update: Update, context: CallbackContext) -> int:
     """Send message on `/start`."""
+    group_id = -1001617590404
+    checker = context.bot.getChatMember(group_id, update.effective_chat.id)
+    if checker["status"] == "left":
+        context.bot.send_message(
+            update.effective_chat.id,
+            text = "Please join our telegram group to use the bot, we offer a lot there as well!\nhttps://t.me/wegotonightinriga"
+        )
+        return
+
+    else:
+        db.update_joined_group(update.effective_chat.id, True)
+
     edit_msg = True
     if update.callback_query:
         lang = update.callback_query.data
@@ -74,7 +86,36 @@ def start(update: Update, context: CallbackContext) -> int:
             text=f"You have selected {lang_mapping.get(lang)} as your preferred language, you can always change it using /settings command.",
         )
 
-        return ConversationHandler.END
+        if not context.chat_data.get("lang"):
+            context.chat_data["lang"] = db.get_account(user["id"])["lang"]
+        lang = context.chat_data["lang"]
+
+        group_id = -1001617590404
+        checker = context.bot.getChatMember(group_id, update.effective_chat.id)
+
+        if checker["status"] == "left":
+            context.bot.send_message(
+                update.effective_chat.id,
+                text = "Please join our telegram group to use the bot, we offer a lot there as well!\nhttps://t.me/wegotonightinriga"
+            )
+            return
+        
+        elif not db.get_joined_group_status(update.effective_chat.id):
+            db.update_joined_group(update.effective_chat.id, True)
+
+        keyboard = [
+            [InlineKeyboardButton(_("Today", lang), callback_data="today")],
+            [InlineKeyboardButton(_("This week", lang), callback_data="week")],
+            [InlineKeyboardButton(_("This month", lang), callback_data="month")],
+        ]
+
+        context.bot.send_message(
+            update.effective_user.id,
+            text=_("When would you like to go?", context.chat_data["lang"]),
+            reply_markup=InlineKeyboardMarkup(keyboard),
+        )
+
+        return "START_ROUTES"
 
     if update.message:
         message_date = update.message.date.strftime("%Y-%m-%d %H:%M:%S")
@@ -107,62 +148,29 @@ def start(update: Update, context: CallbackContext) -> int:
     elif context.chat_data.get("message"):
         update.message = context.chat_data["message"]
 
-    group_id = -1001617590404
-    checker = update.message.bot.getChatMember(group_id, update.effective_chat.id)
-    
-    if checker["status"] == "left":
-        update.message.bot.send_message(
-        update.effective_chat.id,
-        text = "Please join our telegram group to use the bot, we offer a lot there as well!\nhttps://t.me/wegotonightinriga")
-        
-        return
-
-    else:
-        if not context.chat_data.get("lang"):
-            context.chat_data["lang"] = db.get_account(user["id"])["lang"]
-        lang = context.chat_data["lang"]
-        keyboard = [
-            [InlineKeyboardButton(_("Today", lang), callback_data="today")],
-            [InlineKeyboardButton(_("This week", lang), callback_data="week")],
-            [InlineKeyboardButton(_("This month", lang), callback_data="month")],
-        ]
-
-        if edit_msg:
-            message = update.callback_query
-            message.answer()
-            message.edit_message_text(
-                text=_("When would you like to go?", context.chat_data["lang"]),
-                reply_markup=InlineKeyboardMarkup(keyboard),
-            )
-
-        else:
-            update.message.reply_text(
-                text=_("When would you like to go?", context.chat_data["lang"]),
-                reply_markup=InlineKeyboardMarkup(keyboard),
-            )
-
-        return "START_ROUTES"
-
-
-def start_over(update: Update, context: CallbackContext) -> int:
-    """Prompt same text & keyboard as `event_type` does but not as new message"""
-    message = update.callback_query
+    if not context.chat_data.get("lang"):
+        context.chat_data["lang"] = db.get_account(user["id"])["lang"]
     lang = context.chat_data["lang"]
-    message.answer()
-
     keyboard = [
-        [InlineKeyboardButton(f"🎸 {_('Concerts/Parties', lang)} 🎉", callback_data="Concerts/Parties")],
-        [InlineKeyboardButton(f"⛩️ {_('Culture', lang)} 🗽", callback_data="Culture")],
-        [InlineKeyboardButton(f"🧩 {_('Workshop', lang)} 🛍️", callback_data="Workshop")],
-        [InlineKeyboardButton(f"🍱 {_('Food/Drinks', lang)} 🥂", callback_data="Food/Drinks")],
-        [InlineKeyboardButton(f"🎨 {_('Art/Literature', lang)} 📚", callback_data="Art/Literature")],
-        [InlineKeyboardButton(f"🎭 {_('Theatre/Stand up', lang)} 🎤", callback_data="Theatre/Stand up")],
+        [InlineKeyboardButton(_("Today", lang), callback_data="today")],
+        [InlineKeyboardButton(_("This week", lang), callback_data="week")],
+        [InlineKeyboardButton(_("This month", lang), callback_data="month")],
     ]
 
-    message.edit_message_text(
-        text="Hope you will like something else, I am glad to offer you other options",
-        reply_markup=InlineKeyboardMarkup(keyboard),
-    )
+    if edit_msg:
+        message = update.callback_query
+        message.answer()
+        message.edit_message_text(
+            text=_("When would you like to go?", context.chat_data["lang"]),
+            reply_markup=InlineKeyboardMarkup(keyboard),
+        )
+
+    else:
+        update.message.reply_text(
+            text=_("When would you like to go?", context.chat_data["lang"]),
+            reply_markup=InlineKeyboardMarkup(keyboard),
+        )
+
     return "START_ROUTES"
 
 
@@ -531,7 +539,7 @@ def push_to_group(update: Update, context: CallbackContext) -> int:
               "\nYou're welcome!")
     )
     
-    group_id = -1001535413676
+    group_id = -1001617590404
     update.message.bot.copy_message(
         group_id,
         advert_owner.get("telegram_user_id"),
@@ -614,6 +622,8 @@ def settings(update: Update, context: CallbackContext) -> int:
     return "SELECTED"
 
 def edit_language(update: Update, context: CallbackContext) -> int:
+    message = update.callback_query
+    message.answer()
     keyboard = [
         [
             InlineKeyboardButton("🇬🇧", callback_data="new-en"),
@@ -631,7 +641,9 @@ def edit_language(update: Update, context: CallbackContext) -> int:
     return "SELECTED"
 
 def save_language(update: Update, context: CallbackContext) -> int:
-    lang = update.callback_query.data.split("-")[1]
+    message = update.callback_query
+    message.answer()
+    lang = message.data.split("-")[1]
     if db.get_account(update.effective_user.id):
         db.update_selected_lang(update.effective_user.id, lang)
 
@@ -686,7 +698,7 @@ def main() -> None:
             "END_ROUTES": [
                 CallbackQueryHandler(event_list, pattern="^" + event_types_with_counter + "$"),
                 CallbackQueryHandler(event_details, pattern="^details"),
-                CallbackQueryHandler(start_over, pattern="^event_type$"),
+                CallbackQueryHandler(event_type, pattern="^event_type$"),
                 CallbackQueryHandler(end, pattern="^end$"),
             ],
         },
