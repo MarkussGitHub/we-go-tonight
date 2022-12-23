@@ -60,6 +60,7 @@ class DBManager:
             "refered_by": raw[4],
             "is_staff": raw[5],
             "lang": raw[6],
+            "joined_group": raw[7],
         }
 
     def _convert_advert_to_dict(self, raw):
@@ -176,3 +177,26 @@ class DBManager:
         self.cursor.execute(sql_query, data)
 
         self.conn.commit()
+
+    def update_joined_group(self, user, joined):
+        """Updates user joined group in db."""
+        sql_query = """UPDATE account
+            SET joined_group = %s
+            WHERE telegram_user_id = %s"""
+        data = (joined, str(user),)
+        self.cursor.execute(sql_query, data)
+
+        self.conn.commit()
+
+    def get_joined_group_status(self, user):
+        """Returns account from db by telegram_user_id."""
+        sql_query = "SELECT * FROM account WHERE telegram_user_id = %s"
+        data = (str(user),)
+        self.cursor.execute(sql_query, data)
+        self.conn.commit()
+        raw_result = self.cursor.fetchone()
+
+        if raw_result:
+            result = self._convert_account_to_dict(raw_result)
+            print(result["joined_group"])
+            return result["joined_group"]
