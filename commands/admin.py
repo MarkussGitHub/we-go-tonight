@@ -40,7 +40,5 @@ def statistics(update: Update, context: CallbackContext) -> None:
         update.message.reply_text(
             text= f"Here are the statistics as of today:\nTotal users: {result_users.get('Count')}\nNew users: {result_new_users.get('Count')}\nUsers who started the bot and joined the group: {result_users_in_group.get('Count')}",
         )
-        logger.info(f"{user.first_name} called statistics. User ID: {user.id}")
-        
     else:
         return
