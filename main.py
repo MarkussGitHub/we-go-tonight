@@ -5,7 +5,7 @@ import pytz
 import yaml
 from telegram.ext import CommandHandler, Updater
 
-from commands.admin import event_list_manual_update, event_list_updater
+from commands.admin import event_list_manual_update, event_list_updater, statistics
 from commands.advert import denial_handler, push_handler
 from commands.event_menu import conv_handler
 from commands.search import search_handler
@@ -44,6 +44,7 @@ def main() -> None:
     dispatcher.add_handler(settings_handler)
 
     # on different commands - answer in Telegram
+    dispatcher.add_handler(CommandHandler("stats", statistics))
     dispatcher.add_handler(CommandHandler("update", event_list_manual_update))
     dispatcher.add_handler(CommandHandler("help", help_command))
 
