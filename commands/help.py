@@ -23,14 +23,13 @@ def help_command(update: Update, context: CallbackContext) -> None:
         "id": update.effective_user.id
     }
     lang = db.get_account(user.get("id")).get("lang")
-    
+    keyboard = [
+            [InlineKeyboardButton(_("Description", lang), callback_data="desc")]
+    ]
     
     if db.get_account(user.get("id")).get("lang") is None:
         db.update_selected_lang(user.get("id"), lang)
     
-    keyboard = [
-            [InlineKeyboardButton(_("Description", lang), callback_data="desc")]
-    ]
     
     group_id = -1001617590404
     checker = context.bot.getChatMember(group_id, update.effective_chat.id)
@@ -53,7 +52,7 @@ def help_command(update: Update, context: CallbackContext) -> None:
                     "will help you to choose the navigation language.\n\n"
                     "❓ The Command /help\n"
                     "will display this instruction once again, as well as a short video on all bot functions.\n\n"
-                    "🗒 The Command /events\n"
+                    "🗒 The Command /start\n"
                     "will navigate you through upcoming or ongoing events, just choose a time period, event type and click an event you like.\n\n"
                     "🔎 The Command /search\n"
                     "will help you find places by their names.\n\n"
@@ -65,7 +64,7 @@ def help_command(update: Update, context: CallbackContext) -> None:
                     "поможет выбрать удобный язык интерфейса твоего бота.\n\n"
                     "❓ Команда /help\n"
                     "покажет тебе эту инструкцию еще раз, а также короткое видео о работе всех команд.\n\n"
-                    "🗒 Команда /events\n"
+                    "🗒 Команда /start\n"
                     "загрузит события в интересующий тебя период времени, просто выбери дату, тип события и понравившейся эвент.\n\n"
                     "🔎 Команда /search\n"
                     "поможет найти места или события по названию.\n\n"
@@ -77,7 +76,7 @@ def help_command(update: Update, context: CallbackContext) -> None:
                     "palīdzēs Jums izvēlēties ērtu saskarnes valodu jūsu botam.\n\n"
                     "❓ Komanda /help\n"
                     "vēlreiz parādīs šo instrukciju, kā arī īsu video par visu bota funkcionalitāti.\n\n"
-                    "🗒 Komanda /events\n"
+                    "🗒 Komanda /start\n"
                     "ielādēs notikumus Jūs interesējošajā laika periodā, vienkārši atlasiet datumu, notikuma veidu un notikumu, kurš jums patīk.\n\n"
                     "🔎 Komanda /search\n"
                     "palīdzēs atrast vietas vai notikumus pēc nosaukuma.\n\n"
