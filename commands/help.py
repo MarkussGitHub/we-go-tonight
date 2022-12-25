@@ -93,20 +93,62 @@ def help_command(update: Update, context: CallbackContext) -> None:
         return "DESC"
 
 def description(update: Update, context: CallbackContext) -> None:
+    
+    if not context.chat_data.get("lang"):
+            acc = db.get_account(update.effective_chat.id)
+            context.chat_data["lang"] = acc.get("lang", "en") if acc is not None else "en"
+
+    if context.chat_data["lang"] == "en":
+        desc_text = (
+            "Hey! This is our WeGoTonight Bot in Riga!.\n"
+            "I'll help you quickly and conveniently build memorable"
+            " plans on a date of interest to you."
+            "\nWhat can your bot of leisure do?\n"
+            "• Makes it possible to make the most fun and interesting plans for any taste!\n"
+            "• Displays what activities take place in different Riga institutions\n"
+            "• Shows you where your favorite place is and how to get there quickly\n"
+            "• Inform you about the coolest parties of the week.\n"
+            "Subscribe to our channel to learn about the upcoming events first! Ask questions,"
+            " and share your impressions of favorite institutions in our community\n"
+            "To learn more about upcoming events, go to our Instagram page! Announcements,"
+            " selections, and just beautiful places in Riga are waiting for your attention!"
+        )
+        
+    elif context.chat_data["lang"] == "ru":
+        desc_text = (
+            "Привет! Это наш бот WeGoTonight!.\n"
+            "Я помогу тебе быстро и практично найти"
+            " планы на день, то, что интересно тебе."
+            "\nЧто может делать твой бот досуга?\n"
+            "• Даёт возможность создания самых весёлых и интересных планов на любой вкус!\n"
+            "• Отображает, какие мероприятия проходят в различных заведениях Риги\n"
+            "• Покажет, где находится понравившееся заведение и как быстрей туда добраться\n"
+            "• Проинформирует о самых крутых вечеринках недели.\n"
+            "Подписывайся на наш канал, чтобы узнавать о предстоящих мероприятиях самым первым! Задавай вопросы,"
+            " а так же делись впечатлениями о любимых заведениях в нашем community\n"
+            "Чтобы узнать еще больше информации о предстоящих мероприятиях,  переходи на нашу Инстаграм страницу! Анонсы,"
+            " подборки и просто красивые места Риги ждут твоего внимания!"
+    )
+
+    elif context.chat_data["lang"] == "lv":
+        desc_text = (
+            "Čau! Šis ir mūsu WeGoTonight bots Rīgā!.\n"
+            "Palīdzēšu tev ātri un parocīgi izvlēties"
+            " plānus vakaram, datumā, kurš tev interesē."
+            "\nKo es varu tev piedāvāt?\n"
+            "• Nezino ko darīt? Atradīšu visinteresantākos notikumus jebkuram!!\n"
+            "• Parādīšu kādi pasākumi notiek dažādās Rīgas iestādēs.\n"
+            "• Parādīšu tev tavu jaunizvēlēto iestādi, kā arī kā līdz viņai nokļūt!\n"
+            "• Atradīšu tev labākos nedēļas tusiņus.\n"
+            "Paraksties uz mūsu kanālu, lai pirmais saņemtu ziņas! Uzdod jautājumus,"
+            " un dalies pieredzē ar savām mīļākajām vietām mūsu lokā\n"
+            "Lai uzzinātu par topošajiem pasākumiem, nāc pie mums uz arī uz Instagram! Paziņojumi,"
+            " izlases un vienkārši skaistas Rīgas vietas gaida tevi!"
+    )
+
     context.bot.send_message(
         update.effective_user.id,
-        text = ("Hey! This is our WeGoTonight Bot in Riga!.\n"
-        "I'll help you quickly and conveniently build memorable"
-        " plans on a date of interest to you."
-        "\nWhat can your bot of leisure do?\n"
-        "• Makes it possible to make the most fun and interesting plans for any taste!\n"
-        "• Displays what activities take place in different Riga institutions\n"
-        "• Shows you where your favorite place is and how to get there quickly\n"
-        "• Inform you about the coolest parties of the week.\n"
-        "Subscribe to our channel to learn about the upcoming events first! Ask questions,"
-        " and share your impressions of favorite institutions in our community\n"
-        "To learn more about upcoming events, go to our Instagram page! Announcements,"
-        " collections, and just beautiful places in Riga are waiting for your attention!") 
+        text = desc_text 
     )
 
 help_handler = ConversationHandler(
