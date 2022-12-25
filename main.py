@@ -10,7 +10,7 @@ from commands.advert import denial_handler, push_handler
 from commands.event_menu import conv_handler
 from commands.search import search_handler
 from commands.settings import settings_handler
-from commands.help import help_command
+from commands.help import help_handler, help_command
 from utils.sheets_connection import sheet
 
 # Enable logging
@@ -42,6 +42,7 @@ def main() -> None:
     dispatcher.add_handler(search_handler)
     dispatcher.add_handler(denial_handler)
     dispatcher.add_handler(settings_handler)
+    dispatcher.add_handler(help_handler)
 
     # on different commands - answer in Telegram
     dispatcher.add_handler(CommandHandler("stats", statistics))
