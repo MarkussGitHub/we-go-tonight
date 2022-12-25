@@ -33,7 +33,7 @@ def help_command(update: Update, context: CallbackContext) -> None:
                 [InlineKeyboardButton(_("Description", lang), callback_data="desc")]
         ]
         
-        group_id = -1001871954787
+        group_id = -1001617590404
         checker = context.bot.getChatMember(group_id, update.effective_chat.id)
         if checker["status"] == "left":
             context.bot.send_message(

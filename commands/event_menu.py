@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 def start(update: Update, context: CallbackContext) -> int:
     """Send message on `/start`."""
-    group_id = -1001871954787
+    group_id = -1001617590404
     checker = context.bot.getChatMember(group_id, update.effective_chat.id)
     if checker["status"] == "left":
         context.bot.send_message(
@@ -60,7 +60,7 @@ def start(update: Update, context: CallbackContext) -> int:
             context.chat_data["lang"] = db.get_account(user["id"])["lang"]
         lang = context.chat_data["lang"]
 
-        group_id = -1001871954787
+        group_id = -1001617590404
         checker = context.bot.getChatMember(group_id, update.effective_chat.id)
 
         if checker["status"] == "left":
