@@ -203,3 +203,40 @@ class DBManager:
         if raw_result:
             result = self._convert_account_to_dict(raw_result)
             return result["joined_group"]
+        
+    def get_users(self):
+        "Returns User count from db"
+        sql_query = "SELECT COUNT(*) AS NumberOfUsers FROM account"
+        self.cursor.execute(sql_query)
+        self.conn.commit()
+        raw_result = self.cursor.fetchone()
+        if raw_result:
+            result = self.convert_users_to_dict(raw_result)
+            return result
+    
+    def get_new_users(self):
+        "Returns new user count from db"
+        sql_query = "SELECT COUNT(created) AS NumberOfNewUsers FROM account WHERE created >= NOW() - '1 day'::INTERVAL"
+        self.cursor.execute(sql_query)
+        self.conn.commit()
+        raw_result = self.cursor.fetchone()
+        if raw_result:
+            result = self.convert_users_to_dict(raw_result)
+            return result
+    
+    def get_users_in_group(self):
+        "Returns user count that are in group from db"
+        sql_query = "SELECT COUNT(joined_group) AS NumberOfNewUsers FROM account WHERE joined_group = true"
+        self.cursor.execute(sql_query)
+        self.conn.commit()
+        raw_result = self.cursor.fetchone()
+        if raw_result:
+            result = self.convert_users_to_dict(raw_result)
+            return result
+
+    
+    def convert_users_to_dict(self, raw):
+        """Converts raw user count from db to dict."""
+        return {
+            "Count": raw[0]
+        }
