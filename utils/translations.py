@@ -20,6 +20,7 @@ translations = {
         "What are you looking for?": "Что Вы ищете?",
         "Here are events that i could find": "Вот события, которые я смог найти",
         "Please select your preferred language": "Пожалуйста, выберите предпочитаемый язык",
+        "Decription": "Описание"
     },
     "lv": {
         "When would you like to go?": "Kad jūs vēlaties doties?",
@@ -42,6 +43,7 @@ translations = {
         "What are you looking for?": "Ko jūs meklējat?",
         "Here are events that i could find": "Šeit ir notikumi, kurus es varēju atrast",
         "Please select your preferred language": "Lūdzu, izvēlietes vēlamo valodu",
+        "Decription": "Apraksts"
     }
 }
 
