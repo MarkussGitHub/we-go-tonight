@@ -55,7 +55,7 @@ def help_command(update: Update, context: CallbackContext) -> None:
                     "🗒 The Command /start\n"
                     "will navigate you through upcoming or ongoing events, just choose a time period, event type and click an event you like.\n\n"
                     "🔎 The Command /search\n"
-                    "will help you find places by their names.\n\n"
+                    "will help you find events or places by their names.\n\n"
                     "The button with 📍 emoji will guide you the location of the chosen event."
         )
     
