@@ -98,7 +98,7 @@ def start(update: Update, context: CallbackContext) -> int:
         logger.info(f"{user.first_name}, started the conversation. User ID: {user.id}")
 
         referal = context.args[0] if context.args else None
-        if db.get_account(user.id) is None:
+        if db.get_account(user.id)["lang"] is None:
             keyboard = [
                 [
                     InlineKeyboardButton("🇬🇧", callback_data="en"),
