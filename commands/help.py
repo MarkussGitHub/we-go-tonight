@@ -19,6 +19,9 @@ logger = logging.getLogger(__name__)
 
 
 def help_command(update: Update, context: CallbackContext) -> None:
+    if not context.chat_data.get("lang"):
+        acc = db.get_account(update.effective_chat.id)
+        context.chat_data["lang"] = acc.get("lang", "en") if acc is not None else "en"
     user = {
         "id": update.effective_user.id
     }
@@ -29,7 +32,7 @@ def help_command(update: Update, context: CallbackContext) -> None:
         db.update_selected_lang(user.get("id"), lang)
     
     keyboard = [
-            [InlineKeyboardButton(_("Description", lang), callback_data="desc")]
+        [InlineKeyboardButton(_("Tutorial", lang)+ " 📷", callback_data="desc")],
     ]
     
     group_id = -1001617590404
@@ -44,66 +47,8 @@ def help_command(update: Update, context: CallbackContext) -> None:
     else:
         db.update_joined_group(update.effective_chat.id, True)
 
-    if not context.chat_data.get("lang"):
-        acc = db.get_account(update.effective_chat.id)
-        context.chat_data["lang"] = acc.get("lang", "en") if acc is not None else "en"
-
     if context.chat_data["lang"] == "en":
-        help_text = ("⚙️ The Command /settings\n"
-                    "will help you to choose the navigation language.\n\n"
-                    "❓ The Command /help\n"
-                    "will display this instruction once again, as well as a short video on all bot functions.\n\n"
-                    "🗒 The Command /events\n"
-                    "will navigate you through upcoming or ongoing events, just choose a time period, event type and click an event you like.\n\n"
-                    "🔎 The Command /search\n"
-                    "will help you find places by their names.\n\n"
-                    "The button with 📍 emoji will guide you the location of the chosen event."
-        )
-    
-    elif context.chat_data["lang"] == "ru":
-        help_text = ("⚙️ Команда /settings\n"
-                    "поможет выбрать удобный язык интерфейса твоего бота.\n\n"
-                    "❓ Команда /help\n"
-                    "покажет тебе эту инструкцию еще раз, а также короткое видео о работе всех команд.\n\n"
-                    "🗒 Команда /events\n"
-                    "загрузит события в интересующий тебя период времени, просто выбери дату, тип события и понравившейся эвент.\n\n"
-                    "🔎 Команда /search\n"
-                    "поможет найти места или события по названию.\n\n"
-                    "Кнопка со значком 📍 покажет местонахождения выбранного места."
-        )
-
-    elif context.chat_data["lang"] == "lv":
-        help_text = ("⚙️ Komanda /settings\n"
-                    "palīdzēs Jums izvēlēties ērtu saskarnes valodu jūsu botam.\n\n"
-                    "❓ Komanda /help\n"
-                    "vēlreiz parādīs šo instrukciju, kā arī īsu video par visu bota funkcionalitāti.\n\n"
-                    "🗒 Komanda /events\n"
-                    "ielādēs notikumus Jūs interesējošajā laika periodā, vienkārši atlasiet datumu, notikuma veidu un notikumu, kurš jums patīk.\n\n"
-                    "🔎 Komanda /search\n"
-                    "palīdzēs atrast vietas vai notikumus pēc nosaukuma.\n\n"
-                    "Poga ar zīmi 📍 parādīs izvēlētā notikuma atrašanās vietu."
-        )
-
-    update.message.reply_text(
-        text = help_text,
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
-    
-    return "DESC"
-
-def description(update: Update, context: CallbackContext) -> None:
-    user = {
-            "id": update.effective_user.id
-        }
-    lang = db.get_account(user.get("id")).get("lang")
-    
-    keyboard = [
-        [InlineKeyboardButton(_("Video Tutorial", lang)+ " 📷", callback_data="tutorial")],
-        [InlineKeyboardButton(_("Cancel", lang), callback_data="end")]
-    ]
-
-    if context.chat_data["lang"] == "en":
-        desc_text = (
+            desc_text = (
             "Hey! This is our WeGoTonight Bot in Riga! 🤖\n\n"
             "I'll help you quickly and conveniently build memorable"
             " plans on a date of interest to you.\n\n"
@@ -150,61 +95,84 @@ def description(update: Update, context: CallbackContext) -> None:
             " izlases un vienkārši skaistas 📍 Rīgas vietas gaida tevi!"
     )
     context.bot.send_photo(
-        update.effective_user.id,
-        "https://imgur.com/a/P87xKm7",
+        update.effective_chat.id,
+        photo = "https://imgur.com/kFhDkhh",
         caption = desc_text,
-        reply_markup = InlineKeyboardMarkup(keyboard)
+        reply_markup=InlineKeyboardMarkup(keyboard)
     )
     
     return "TUT"
 
-def tutorial(update: Update, context: CallbackContext) -> None:
+def description(update: Update, context: CallbackContext) -> None:
+    if not context.chat_data.get("lang"):
+        acc = db.get_account(update.effective_chat.id)
+        context.chat_data["lang"] = acc.get("lang", "en") if acc is not None else "en"
+        
     user = {
             "id": update.effective_user.id
         }
     lang = db.get_account(user.get("id")).get("lang")
     
     keyboard = [
-        [InlineKeyboardButton(_("Back", lang), callback_data="desc")],
-        [InlineKeyboardButton(_("Cancel", lang), callback_data="end")]
+        [InlineKeyboardButton(_("Back", lang), callback_data="help")]
     ]
+
+    
+    if context.chat_data["lang"] == "en":
+            help_text = ("⚙️ The Command /settings\n"
+                    "will help you to choose the navigation language.\n\n"
+                    "❓ The Command /help\n"
+                    "will display this instruction once again, as well as a short video on all bot functions.\n\n"
+                    "🗒 The Command /events\n"
+                    "will navigate you through upcoming or ongoing events, just choose a time period, event type and click an event you like.\n\n"
+                    "🔎 The Command /search\n"
+                    "will help you find places by their names.\n\n"
+                    "The button with 📍 emoji will guide you the location of the chosen event."
+        )
+    
+    elif context.chat_data["lang"] == "ru":
+        help_text = ("⚙️ Команда /settings\n"
+                    "поможет выбрать удобный язык интерфейса твоего бота.\n\n"
+                    "❓ Команда /help\n"
+                    "покажет тебе эту инструкцию еще раз, а также короткое видео о работе всех команд.\n\n"
+                    "🗒 Команда /events\n"
+                    "загрузит события в интересующий тебя период времени, просто выбери дату, тип события и понравившейся эвент.\n\n"
+                    "🔎 Команда /search\n"
+                    "поможет найти места или события по названию.\n\n"
+                    "Кнопка со значком 📍 покажет местонахождения выбранного места."
+        )
+
+    elif context.chat_data["lang"] == "lv":
+        help_text = ("⚙️ Komanda /settings\n"
+                    "palīdzēs Jums izvēlēties ērtu saskarnes valodu jūsu botam.\n\n"
+                    "❓ Komanda /help\n"
+                    "vēlreiz parādīs šo instrukciju, kā arī īsu video par visu bota funkcionalitāti.\n\n"
+                    "🗒 Komanda /events\n"
+                    "ielādēs notikumus Jūs interesējošajā laika periodā, vienkārši atlasiet datumu, notikuma veidu un notikumu, kurš jums patīk.\n\n"
+                    "🔎 Komanda /search\n"
+                    "palīdzēs atrast vietas vai notikumus pēc nosaukuma.\n\n"
+                    "Poga ar zīmi 📍 parādīs izvēlētā notikuma atrašanās vietu."
+        )
     
     context.bot.send_video(
-        update._effective_user.id,
+        update.effective_user.id,
         video = "https://i.imgur.com/yAfMpz9.mp4",
+        caption = help_text,
         reply_markup = InlineKeyboardMarkup(keyboard)
     )
     
     return "DESC"
 
-def cancel(update: Update, context: CallbackContext) -> None:
-    """
-    Returns `ConversationHandler.END`, which tells the
-    ConversationHandler that the conversation is over.
-    Made for the second optiion of completely setting off the bot by pressing cancel
-    called at the end of every type of event
-    """
-    message = update.callback_query
-    lang = context.chat_data["lang"]
-    message.answer()
-    context.bot.send_message(
-        update.effective_chat.id,
-        text=_("I hope you will use our services again", lang)
-    )
-    
-    return ConversationHandler.END
     
     
 help_handler = ConversationHandler(
     entry_points=[CommandHandler("help", help_command)],
     states={
         "DESC": [
-            CallbackQueryHandler(description, pattern="^desc$"),
-            CallbackQueryHandler(cancel, pattern="^end$")
+            CallbackQueryHandler(help_command, pattern="^help$"),
         ],
         "TUT":[
-            CallbackQueryHandler(tutorial, pattern="^tutorial$"),
-            CallbackQueryHandler(cancel, pattern="^end$")
+            CallbackQueryHandler(description, pattern="^desc$"),
         ]
     },
     fallbacks=[CommandHandler("help", help_command)],
