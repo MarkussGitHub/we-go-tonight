@@ -120,7 +120,7 @@ def description(update: Update, context: CallbackContext) -> None:
         
     elif context.chat_data["lang"] == "ru":
         desc_text = (
-            "Привет! Это наш бот WeGoTonight!. 🤖\n\n"
+            "Привет! Это наш бот WeGoTonight! 🤖\n\n"
             "Я помогу тебе быстро и практично найти"
             " планы на день, то, что интересно тебе.\n\n"
             "Что может делать твой бот досуга?\n\n"
@@ -136,7 +136,7 @@ def description(update: Update, context: CallbackContext) -> None:
 
     elif context.chat_data["lang"] == "lv":
         desc_text = (
-            "Čau! Šis ir mūsu WeGoTonight bots Rīgā!. 🤖\n\n"
+            "Čau! Šis ir mūsu WeGoTonight bots Rīgā! 🤖\n\n"
             "Palīdzēšu tev ātri un parocīgi izvlēties"
             " plānus vakaram, datumā, kurš tev interesē.\n\n"
             "Ko es varu tev piedāvāt?\n\n"
