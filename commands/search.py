@@ -41,7 +41,7 @@ def search_by_name_start(update: Update, context: CallbackContext) -> None:
         lang = context.chat_data["lang"]
         update.message.bot.send_message(
             update.effective_user.id,
-            text=_("What are you looking for?", lang)
+            text=_("What event or place are you looking for?", lang)
         )
         return "SEARCH"
 
