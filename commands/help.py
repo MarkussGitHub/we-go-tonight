@@ -97,8 +97,7 @@ def description(update: Update, context: CallbackContext) -> None:
     lang = db.get_account(user.get("id")).get("lang")
     
     keyboard = [
-        [InlineKeyboardButton(_("Video Tutorial", lang)+ " 📷", callback_data="tutorial")],
-        [InlineKeyboardButton(_("Cancel", lang), callback_data="end")]
+        [InlineKeyboardButton(_("Video Tutorial", lang)+ " 📷", callback_data="tutorial")]
     ]
 
     if context.chat_data["lang"] == "en":
@@ -158,40 +157,12 @@ def description(update: Update, context: CallbackContext) -> None:
     return "TUT"
 
 def tutorial(update: Update, context: CallbackContext) -> None:
-    user = {
-            "id": update.effective_user.id
-        }
-    lang = db.get_account(user.get("id")).get("lang")
-    
-    keyboard = [
-        [InlineKeyboardButton(_("Back", lang), callback_data="desc")],
-        [InlineKeyboardButton(_("Cancel", lang), callback_data="end")]
-    ]
-    
     context.bot.send_video(
         update._effective_user.id,
         video = "https://i.imgur.com/yAfMpz9.mp4",
-        reply_markup = InlineKeyboardMarkup(keyboard)
     )
     
     return "DESC"
-
-def cancel(update: Update, context: CallbackContext) -> None:
-    """
-    Returns `ConversationHandler.END`, which tells the
-    ConversationHandler that the conversation is over.
-    Made for the second optiion of completely setting off the bot by pressing cancel
-    called at the end of every type of event
-    """
-    message = update.callback_query
-    lang = context.chat_data["lang"]
-    message.answer()
-    context.bot.send_message(
-        update.effective_chat.id,
-        text=_("I hope you will use our services again", lang)
-    )
-    
-    return ConversationHandler.END
     
     
 help_handler = ConversationHandler(
@@ -199,11 +170,9 @@ help_handler = ConversationHandler(
     states={
         "DESC": [
             CallbackQueryHandler(description, pattern="^desc$"),
-            CallbackQueryHandler(cancel, pattern="^end$")
         ],
         "TUT":[
             CallbackQueryHandler(tutorial, pattern="^tutorial$"),
-            CallbackQueryHandler(cancel, pattern="^end$")
         ]
     },
     fallbacks=[CommandHandler("help", help_command)],
