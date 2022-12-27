@@ -98,6 +98,10 @@ def start(update: Update, context: CallbackContext) -> int:
         logger.info(f"{user.first_name}, started the conversation. User ID: {user.id}")
 
         referal = context.args[0] if context.args else None
+
+        if not db.get_account(user.id):
+            db.create_account(user, referal)
+
         if db.get_account(user.id)["lang"] is None:
             keyboard = [
                 [
@@ -110,7 +114,6 @@ def start(update: Update, context: CallbackContext) -> int:
                 text="Please select your preferred language",
                 reply_markup=InlineKeyboardMarkup(keyboard),
             )
-            db.create_account(user, referal)
 
             return "START_ROUTES"
         edit_msg = False
