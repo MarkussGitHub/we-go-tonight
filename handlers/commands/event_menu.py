@@ -18,32 +18,22 @@ from telegram.ext import (
 from utils.db_connection import db
 from utils.event_formatters import add_buttons, prepare_event_details
 from utils.translations import translate as _
+from handlers.wrappers import ignore_old_messages, valid_user
 
 logger = logging.getLogger(__name__)
 
 
+@ignore_old_messages
+@valid_user
 def start(update: Update, context: CallbackContext) -> int:
     """Send message on `/start`."""
-    group_id = -1001617590404
-    checker = context.bot.getChatMember(group_id, update.effective_chat.id)
-    if checker["status"] == "left":
-        context.bot.send_message(
-            update.effective_chat.id,
-            text = "Please join our telegram group to use the bot, we offer a lot there as well!\nhttps://t.me/wegotonightinriga"
-        )
-        return
+    user = update.effective_user  
 
-    else:
-        db.update_joined_group(update.effective_chat.id, True)
-
-    edit_msg = True
-    if update.callback_query:
+    if update.callback_query and update.callback_query.data in ["en", "lv", "ru"]:
         lang = update.callback_query.data
-        user = {
-            "id": update.callback_query.message.chat_id
-        }
-        if db.get_account(user.get("id")).get("lang") is None:
-            db.update_selected_lang(user.get("id"), lang)
+        update.callback_query.answer()
+        db.update_selected_lang(user.id, lang)
+        context.chat_data["lang"] = lang
 
         lang_mapping = {
             "en": "🇬🇧",
@@ -52,55 +42,12 @@ def start(update: Update, context: CallbackContext) -> int:
         }
 
         context.bot.send_message(
-            update.effective_user.id,
+            chat_id=user.id,
             text=f"You have selected {lang_mapping.get(lang)} as your preferred language, you can always change it using /settings command.",
         )
 
-        if not context.chat_data.get("lang"):
-            context.chat_data["lang"] = db.get_account(user["id"])["lang"]
-        lang = context.chat_data["lang"]
-
-        group_id = -1001617590404
-        checker = context.bot.getChatMember(group_id, update.effective_chat.id)
-
-        if checker["status"] == "left":
-            context.bot.send_message(
-                update.effective_chat.id,
-                text = "Please join our telegram group to use the bot, we offer a lot there as well!\nhttps://t.me/wegotonightinriga"
-            )
-            return
-        
-        elif not db.get_joined_group_status(update.effective_chat.id):
-            db.update_joined_group(update.effective_chat.id, True)
-
-        keyboard = [
-            [InlineKeyboardButton(_("Today", lang), callback_data="today")],
-            [InlineKeyboardButton(_("This week", lang), callback_data="week")],
-            [InlineKeyboardButton(_("This month", lang), callback_data="month")],
-        ]
-
-        context.bot.send_message(
-            update.effective_user.id,
-            text=_("When would you like to go?", context.chat_data["lang"]),
-            reply_markup=InlineKeyboardMarkup(keyboard),
-        )
-
-        return "START_ROUTES"
-
     if update.message:
-        message_date = update.message.date.strftime("%Y-%m-%d %H:%M:%S")
-        current_date = datetime.utcnow()-timedelta(minutes=1)
-        current_date = current_date.strftime("%Y-%m-%d %H:%M:%S")
-        if message_date < current_date:
-            return
-        
-        user = update.message.from_user
         logger.info(f"{user.first_name}, started the conversation. User ID: {user.id}")
-
-        referal = context.args[0] if context.args else None
-
-        if not db.get_account(user.id):
-            db.create_account(user, referal)
 
         if db.get_account(user.id)["lang"] is None:
             keyboard = [
@@ -116,7 +63,6 @@ def start(update: Update, context: CallbackContext) -> int:
             )
 
             return "START_ROUTES"
-        edit_msg = False
 
     elif context.chat_data.get("message"):
         update.message = context.chat_data["message"]
@@ -124,23 +70,25 @@ def start(update: Update, context: CallbackContext) -> int:
     if not context.chat_data.get("lang"):
         context.chat_data["lang"] = db.get_account(user["id"])["lang"]
     lang = context.chat_data["lang"]
+
     keyboard = [
         [InlineKeyboardButton(_("Today", lang), callback_data="today")],
         [InlineKeyboardButton(_("This week", lang), callback_data="week")],
         [InlineKeyboardButton(_("This month", lang), callback_data="month")],
     ]
 
-    if edit_msg:
+    if update.callback_query and update.callback_query.data == "start":
         message = update.callback_query
         message.answer()
         message.edit_message_text(
-            text=_("When would you like to go?", context.chat_data["lang"]),
+            text=_("When would you like to go?", lang),
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
 
     else:
-        update.message.reply_text(
-            text=_("When would you like to go?", context.chat_data["lang"]),
+        context.bot.send_message(
+            chat_id=user.id,
+            text=_("When would you like to go?", lang),
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
 

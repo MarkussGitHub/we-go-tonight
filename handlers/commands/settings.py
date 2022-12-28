@@ -12,10 +12,13 @@ from telegram.ext import (
 
 from utils.db_connection import db
 from utils.translations import translate as _
+from handlers.wrappers import ignore_old_messages, valid_user
 
 logger = logging.getLogger(__name__)
 
 
+@ignore_old_messages
+@valid_user
 def settings(update: Update, context: CallbackContext) -> int:
     keyboard = [
         [InlineKeyboardButton("Language", callback_data="edit_language")]

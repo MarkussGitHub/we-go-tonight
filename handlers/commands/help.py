@@ -14,35 +14,19 @@ from telegram.ext import (
 
 from utils.translations import translate as _
 from utils.db_connection import db
+from handlers.wrappers import ignore_old_messages, valid_user
 
 logger = logging.getLogger(__name__)
 
 
+@ignore_old_messages
+@valid_user
 def help_command(update: Update, context: CallbackContext) -> None:
-    user = {
-        "id": update.effective_user.id
-    }
-    lang = db.get_account(user.get("id")).get("lang")
+    lang = db.get_account(update.effective_user.id).get("lang")
     keyboard = [
             [InlineKeyboardButton(_("Description", lang), callback_data="desc")]
     ]
     
-    if db.get_account(user.get("id")).get("lang") is None:
-        db.update_selected_lang(user.get("id"), lang)
-    
-    
-    group_id = -1001617590404
-    checker = context.bot.getChatMember(group_id, update.effective_chat.id)
-    if checker["status"] == "left":
-        context.bot.send_message(
-            update.effective_chat.id,
-            text = "Please join our telegram group to use the bot, we offer a lot there as well!\nhttps://t.me/wegotonightinriga"
-        )
-        return
-
-    else:
-        db.update_joined_group(update.effective_chat.id, True)
-
     if not context.chat_data.get("lang"):
         acc = db.get_account(update.effective_chat.id)
         context.chat_data["lang"] = acc.get("lang", "en") if acc is not None else "en"
@@ -84,11 +68,12 @@ def help_command(update: Update, context: CallbackContext) -> None:
         )
 
     update.message.reply_text(
-        text = help_text,
+        text=help_text,
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
     
     return "DESC"
+
 
 def description(update: Update, context: CallbackContext) -> None:
     user = {
@@ -156,6 +141,7 @@ def description(update: Update, context: CallbackContext) -> None:
     
     return "TUT"
 
+
 def tutorial(update: Update, context: CallbackContext) -> None:
     context.bot.send_video(
         update._effective_user.id,
@@ -163,7 +149,7 @@ def tutorial(update: Update, context: CallbackContext) -> None:
     )
     
     return "DESC"
-    
+
     
 help_handler = ConversationHandler(
     entry_points=[CommandHandler("help", help_command)],

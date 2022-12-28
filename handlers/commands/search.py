@@ -20,30 +20,23 @@ from thefuzz import process
 from utils.db_connection import db
 from utils.event_formatters import find_event, prepare_event_details
 from utils.translations import translate as _
+from handlers.wrappers import ignore_old_messages, valid_user
 
 logger = logging.getLogger(__name__)
 
 
+@ignore_old_messages
+@valid_user
 def search_by_name_start(update: Update, context: CallbackContext) -> None:
     """Search by name for user input"""
-    group_id = -1001617590404
-    checker = update.message.bot.getChatMember(group_id, update.effective_chat.id)
-    
-    if checker["status"] == "left":
-        update.message.bot.send_message(
-        update.effective_chat.id,
-        text = "Please join our telegram group to use the bot, we offer a lot there as well!\nhttps://t.me/wegotonightinriga")
-        
-        return
-    else:
-        if not context.chat_data.get("lang"):
-            context.chat_data["lang"] = db.get_account(update.effective_user.id)["lang"]
-        lang = context.chat_data["lang"]
-        update.message.bot.send_message(
-            update.effective_user.id,
-            text=_("What event or place are you looking for?", lang)
-        )
-        return "SEARCH"
+    if not context.chat_data.get("lang"):
+        context.chat_data["lang"] = db.get_account(update.effective_user.id)["lang"]
+    lang = context.chat_data["lang"]
+    update.message.bot.send_message(
+        update.effective_user.id,
+        text=_("What event or place are you looking for?", lang)
+    )
+    return "SEARCH"
 
 
 def get_searched_data(update: Update, context: CallbackContext) -> None:
