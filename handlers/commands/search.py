@@ -30,8 +30,8 @@ logger = logging.getLogger(__name__)
 def search_by_name_start(update: Update, context: CallbackContext) -> None:
     """Search by name for user input"""
     if not context.chat_data.get("lang"):
-        context.chat_data["lang"] = db.get_account(update.effective_user.id)["lang"]
-    lang = context.chat_data["lang"]
+        context.chat_data["lang"] = db.get_account(update.effective_user.id).get("lang")
+    lang = context.chat_data["lang"] if context.chat_data["lang"] else "en"
     update.message.bot.send_message(
         update.effective_user.id,
         text=_("What event or place are you looking for?", lang)

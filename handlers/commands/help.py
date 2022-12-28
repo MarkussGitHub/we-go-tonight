@@ -22,16 +22,15 @@ logger = logging.getLogger(__name__)
 @ignore_old_messages
 @valid_user
 def help_command(update: Update, context: CallbackContext) -> None:
-    lang = db.get_account(update.effective_user.id).get("lang")
+    if not context.chat_data.get("lang"):
+        context.chat_data["lang"] = db.get_account(update.effective_user.id).get("lang", "en")
+    lang = context.chat_data["lang"] if context.chat_data["lang"] else "en"
+
     keyboard = [
             [InlineKeyboardButton(_("Description", lang), callback_data="desc")]
     ]
-    
-    if not context.chat_data.get("lang"):
-        acc = db.get_account(update.effective_chat.id)
-        context.chat_data["lang"] = acc.get("lang", "en") if acc is not None else "en"
 
-    if context.chat_data["lang"] == "en":
+    if lang == "en":
         help_text = ("⚙️ The Command /settings\n"
                     "will help you to choose the navigation language.\n\n"
                     "❓ The Command /help\n"
@@ -43,7 +42,7 @@ def help_command(update: Update, context: CallbackContext) -> None:
                     "The button with 📍 emoji will guide you the location of the chosen event."
         )
     
-    elif context.chat_data["lang"] == "ru":
+    elif lang == "ru":
         help_text = ("⚙️ Команда /settings\n"
                     "поможет выбрать удобный язык интерфейса твоего бота.\n\n"
                     "❓ Команда /help\n"
@@ -55,7 +54,7 @@ def help_command(update: Update, context: CallbackContext) -> None:
                     "Кнопка со значком 📍 покажет местонахождения выбранного места."
         )
 
-    elif context.chat_data["lang"] == "lv":
+    elif lang == "lv":
         help_text = ("⚙️ Komanda /settings\n"
                     "palīdzēs Jums izvēlēties ērtu saskarnes valodu jūsu botam.\n\n"
                     "❓ Komanda /help\n"
@@ -76,16 +75,15 @@ def help_command(update: Update, context: CallbackContext) -> None:
 
 
 def description(update: Update, context: CallbackContext) -> None:
-    user = {
-            "id": update.effective_user.id
-        }
-    lang = db.get_account(user.get("id")).get("lang")
-    
+    if not context.chat_data.get("lang"):
+        context.chat_data["lang"] = db.get_account(update.effective_user.id).get("lang", "en")
+    lang = context.chat_data["lang"] if context.chat_data["lang"] else "en"
+
     keyboard = [
         [InlineKeyboardButton(_("Video Tutorial", lang)+ " 📷", callback_data="tutorial")]
     ]
 
-    if context.chat_data["lang"] == "en":
+    if lang == "en":
         desc_text = (
             "Hey! This is our WeGoTonight Bot in Riga! 🤖\n\n"
             "I'll help you quickly and conveniently build memorable"
@@ -101,7 +99,7 @@ def description(update: Update, context: CallbackContext) -> None:
             " selections, and just beautiful places 📍 in Riga are waiting for your attention!"
         )
         
-    elif context.chat_data["lang"] == "ru":
+    elif lang == "ru":
         desc_text = (
             "Привет! Это наш бот WeGoTonight!. 🤖\n\n"
             "Я помогу тебе быстро и практично найти"
@@ -117,7 +115,7 @@ def description(update: Update, context: CallbackContext) -> None:
             " подборки и просто красивые места 📍 Риги ждут твоего внимания!"
     )
 
-    elif context.chat_data["lang"] == "lv":
+    elif lang == "lv":
         desc_text = (
             "Čau! Šis ir mūsu WeGoTonight bots Rīgā!. 🤖\n\n"
             "Palīdzēšu tev ātri un parocīgi izvlēties"
@@ -133,21 +131,21 @@ def description(update: Update, context: CallbackContext) -> None:
             " izlases un vienkārši skaistas 📍 Rīgas vietas gaida tevi!"
     )
     context.bot.send_photo(
-        update.effective_user.id,
-        "https://imgur.com/a/P87xKm7",
+        chat_id=update.effective_user.id,
+        photo="https://imgur.com/a/P87xKm7",
         caption = desc_text,
         reply_markup = InlineKeyboardMarkup(keyboard)
     )
-    
+
     return "TUT"
 
 
 def tutorial(update: Update, context: CallbackContext) -> None:
     context.bot.send_video(
-        update._effective_user.id,
-        video = "https://i.imgur.com/yAfMpz9.mp4",
+        chat_id=update.effective_user.id,
+        video="https://i.imgur.com/yAfMpz9.mp4",
     )
-    
+
     return "DESC"
 
     
