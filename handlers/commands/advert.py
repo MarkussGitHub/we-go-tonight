@@ -10,10 +10,12 @@ from telegram.ext import (
 )
 
 from utils.db_connection import db
-
+from handlers.wrappers import valid_user, ignore_old_messages
 logger = logging.getLogger(__name__)
 
 
+@ignore_old_messages
+@valid_user
 def pushadvert(update: Update, context: CallbackContext) -> None:
     user = update.message.from_user
     logger.info(f"User {user.id} wrote pushadvert.")
@@ -29,7 +31,7 @@ def push(update: Update, context: CallbackContext) -> int:
         text=(f"Sent for approval to the admin, if it is approved, it will be posted in the group."
               f"\nIf it is not approved, you will be notified"),
     )
-    ADMIN_id = 1699557868
+    ADMIN_id = 1373382367
     data = db.get_account(update.effective_chat.id)
     advert_id = db.create_advert(update.message.message_id, data.get("id"))
     update.message.bot.forward_message(
@@ -38,11 +40,11 @@ def push(update: Update, context: CallbackContext) -> int:
         update.message.message_id
     )
     update.message.bot.send_message(ADMIN_id, advert_id)
-        
+
     return ConversationHandler.END
 
 def approval(update: Update, context: CallbackContext) -> int:
-    ADMIN_id = 1699557868
+    ADMIN_id = 1373382367
     if update.effective_chat.id == ADMIN_id:
         update.message.reply_text(
                 text=(f"Please write the id of the advert you're approving," 
@@ -68,7 +70,7 @@ def push_to_group(update: Update, context: CallbackContext) -> int:
               "\nYou're welcome!")
     )
     
-    group_id = -1001617590404
+    group_id = -1001792279795
     update.message.bot.copy_message(
         group_id,
         advert_owner.get("telegram_user_id"),
@@ -80,7 +82,7 @@ def push_to_group(update: Update, context: CallbackContext) -> int:
     return ConversationHandler.END
 
 def denial(update: Update, context: CallbackContext) -> int:
-    ADMIN_id = 1699557868
+    ADMIN_id = 1373382367
     if update.effective_chat.id == ADMIN_id:
         update.message.reply_text(
                 text=(f"Please write the id of the advert you're denying," 
