@@ -20,15 +20,15 @@ def restricted_access(func):
 @restricted_access
 def event_list_manual_update(update: Update, context: CallbackContext) -> None:
     user = update.effective_user
-    sheet.get_sheet()
+    sheet.get_sheets()
     update.message.reply_text(
-        text="Event list updated successfully!",
+        text="Event and Places lists updated successfully!",
     )
-    logger.info(f"{user.first_name} updated event list manually. User ID: {user.id}")
+    logger.info(f"{user.first_name} updated lists manually. User ID: {user.id}")
 
 
 def event_list_updater(update: Update) -> None:
-    sheet.get_sheet()
+    sheet.get_sheets()
     return
 
 

@@ -27,7 +27,7 @@ def main() -> None:
     with open("settings.local.yaml", "r") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
     updater = Updater(config["TOKEN"])
-    sheet.get_sheet()
+    sheet.get_sheets()
 
     updater.job_queue.run_daily(event_list_updater,
                                 time(hour=4, minute=00, tzinfo=pytz.timezone('Europe/Riga')),

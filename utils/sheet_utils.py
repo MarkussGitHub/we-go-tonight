@@ -115,6 +115,34 @@ class SheetManager:
             json.dump(result_sorted, f, indent=4)
             logger.info("Event list saved to file.")
 
+    def _save_places_list(self, place_sheet: list) -> None:
+        placeholders = place_sheet[0]
+
+        place_list = []
+
+        for place in place_sheet[1:]:
+            place_list.append(dict(zip(placeholders, place)))
+
+        result = {
+            "last_updated": datetime.now().strftime("%Y/%m/%d %H:%M:%S"),
+            "places": {
+                "Bar": [],
+                "Restaurant": [],
+                "Cafe": [],
+                "Club": [],
+                "Fest": [],
+                "Unique": [],
+            }
+        }
+
+        for place in place_list:
+            place_type = place["place_type"]
+            result["places"][place_type].append(place)
+
+        with open('data/place_list.json', 'w') as f:
+            json.dump(result, f, indent=4)
+            logger.info("Place list saved to file.")
+
     @property
     def code(self) -> str:
         url = input("Enter url after oauth:  ")
@@ -212,7 +240,7 @@ class SheetManager:
         self.access_token_expiry = datetime.now() + timedelta(seconds=r["expires_in"])
 
     @log_exception
-    def get_sheet(self) -> None:
+    def get_events_sheet(self) -> None:
         if not hasattr(self, "access_token"):
             with open("settings.local.yaml", "r") as f:
                 config = yaml.load(f, Loader=yaml.FullLoader)
@@ -222,7 +250,7 @@ class SheetManager:
         if hasattr(self, "access_token") and self.access_token_expired:
             self.refresh_access_token()
 
-        logger.info("Getting sheet")
+        logger.info("Getting events sheet")
 
         r = requests.get(
             url=self.base_url + "1GnS2Soa3llJcxUugvsORYrz0jLkgfZgCKVyJwkn45jc/values/Events!A1:N",
@@ -232,3 +260,30 @@ class SheetManager:
         ).json()
 
         self._save_event_list(r["values"])
+
+    @log_exception
+    def get_places_sheet(self) -> None:
+        if not hasattr(self, "access_token"):
+            with open("settings.local.yaml", "r") as f:
+                config = yaml.load(f, Loader=yaml.FullLoader)
+            self.refresh_token = config["GOOGLE_REFRESH_TOKEN"]
+            self.refresh_access_token()
+
+        if hasattr(self, "access_token") and self.access_token_expired:
+            self.refresh_access_token()
+
+        logger.info("Getting places sheet")
+
+        r = requests.get(
+            url=self.base_url + "1GnS2Soa3llJcxUugvsORYrz0jLkgfZgCKVyJwkn45jc/values/Places!A1:S",
+            headers={
+                "Authorization": f"Bearer {self.access_token}"
+            }
+        ).json()
+
+        self._save_places_list(r["values"])
+ 
+    @log_exception
+    def get_sheets(self) -> None:
+        self.get_events_sheet()
+        self.get_places_sheet()
