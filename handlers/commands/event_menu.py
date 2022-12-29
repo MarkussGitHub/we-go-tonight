@@ -29,6 +29,7 @@ def start(update: Update, context: CallbackContext) -> int:
     """Send message on `/start`."""
     user = update.effective_user  
 
+    # If language was selected
     if update.callback_query and update.callback_query.data in ["en", "lv", "ru"]:
         lang = update.callback_query.data
         update.callback_query.answer()
@@ -46,6 +47,7 @@ def start(update: Update, context: CallbackContext) -> int:
             text=f"You have selected {lang_mapping.get(lang)} as your preferred language, you can always change it using /settings command.",
         )
 
+    # If started using /start
     if update.message:
         logger.info(f"{user.first_name}, started the conversation. User ID: {user.id}")
 
@@ -64,9 +66,11 @@ def start(update: Update, context: CallbackContext) -> int:
 
             return "START_ROUTES"
 
+    # If started over
     elif context.chat_data.get("message"):
         update.message = context.chat_data["message"]
 
+    # If user has no language selected
     if not context.chat_data.get("lang"):
         context.chat_data["lang"] = db.get_account(user["id"])["lang"]
     lang = context.chat_data["lang"]
@@ -77,6 +81,7 @@ def start(update: Update, context: CallbackContext) -> int:
         [InlineKeyboardButton(_("This month", lang), callback_data="month")],
     ]
 
+    # If started over
     if update.callback_query and update.callback_query.data == "start":
         message = update.callback_query
         message.answer()
@@ -85,6 +90,7 @@ def start(update: Update, context: CallbackContext) -> int:
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
 
+    # If started using /start
     else:
         context.bot.send_message(
             chat_id=user.id,
