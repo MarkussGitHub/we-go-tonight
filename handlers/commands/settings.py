@@ -10,7 +10,7 @@ from telegram.ext import (
     MessageHandler
 )
 
-from utils.db_connection import db
+from utils.db.connection import db
 from utils.translations import translate as _
 from handlers.wrappers import ignore_old_messages, valid_user
 

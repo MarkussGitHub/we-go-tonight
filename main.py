@@ -7,11 +7,11 @@ from telegram.ext import CommandHandler, Updater
 
 from handlers.commands.admin import event_list_manual_update, event_list_updater, statistics
 from handlers.commands.advert import denial_handler, push_handler
-from handlers.commands.event_menu import conv_handler
+from handlers.commands.start import conv_handler
 from handlers.commands.search import search_handler
 from handlers.commands.settings import settings_handler
 from handlers.commands.help import help_handler, help_command
-from utils.sheets_connection import sheet
+from utils.sheets.connection import sheet
 
 # Enable logging
 logging.basicConfig(

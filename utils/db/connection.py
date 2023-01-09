@@ -1,6 +1,6 @@
 import yaml
 
-from utils.db_utils import DBManager
+from utils.db.db_utils import DBManager
 
 with open("settings.local.yaml", "r") as f:
     config = yaml.load(f, Loader=yaml.FullLoader)

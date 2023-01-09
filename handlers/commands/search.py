@@ -17,7 +17,7 @@ from telegram.ext import (
 )
 from thefuzz import process
 
-from utils.db_connection import db
+from utils.db.connection import db
 from utils.event_formatters import find_event, prepare_event_details
 from utils.translations import translate as _
 from handlers.wrappers import ignore_old_messages, valid_user

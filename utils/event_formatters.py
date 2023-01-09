@@ -27,6 +27,8 @@ def prepare_event_details(raw_event):
         "booking_availability",
         "event_type",
         "availability_left",
+        "id",
+        "page",
     ]
 
     raw_event_copy = deepcopy(raw_event)
@@ -84,20 +86,25 @@ def add_buttons(
     keyboard, 
     increment, 
     event_group, 
-    selected_event_type
+    selected_event_type,
+    page_size
 ):
-    if counter != 0 and counter+increment != len(event_group):
+    previous_page = counter - page_size
+    next_page = counter + page_size
+
+    if previous_page >= 0:
+        # Add a "previous" button
+        keyboard[-1:1] = [[InlineKeyboardButton("⬅️", callback_data=f"{selected_event_type}-{previous_page}")]]
+    if next_page < len(event_group):
+        # Add a "next" button
+        keyboard[-1:1] = [[InlineKeyboardButton("➡️", callback_data=f"{selected_event_type}-{next_page}")]]
+    if previous_page >= 0 and next_page < len(event_group):
+        # Add both "previous" and "next" buttons
         keyboard[-1:1] = [
             [
-                InlineKeyboardButton("⬅️", callback_data=f"{selected_event_type}-{counter-7}"),
-                InlineKeyboardButton("➡️", callback_data=f"{selected_event_type}-{counter+increment}")
+                InlineKeyboardButton("⬅️", callback_data=f"{selected_event_type}-{previous_page}"),
+                InlineKeyboardButton("➡️", callback_data=f"{selected_event_type}-{next_page}")
             ]
         ]
-
-    if counter != 0 and counter+increment >= len(event_group):
-        keyboard[-1:1] = [[InlineKeyboardButton("⬅️", callback_data=f"{selected_event_type}-{counter-7}")]]
-
-    if counter == 0 and counter+increment < len(event_group):
-        keyboard[-1:1] = [[InlineKeyboardButton("➡️", callback_data=f"{selected_event_type}-{counter+increment}")]]
 
     return keyboard, counter

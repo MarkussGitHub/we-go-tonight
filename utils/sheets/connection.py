@@ -1,6 +1,6 @@
 import yaml
 
-from utils.sheet_utils import SheetManager
+from utils.sheets.sheet_utils import SheetManager
 
 with open("settings.local.yaml", "r") as f:
     config = yaml.load(f, Loader=yaml.FullLoader)

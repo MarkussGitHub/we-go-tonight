@@ -1,7 +1,7 @@
 import logging
 
-from utils.db_connection import db
-from utils.sheets_connection import sheet
+from utils.db.connection import db
+from utils.sheets.connection import sheet
 
 from telegram import Update
 from telegram.ext import CallbackContext
