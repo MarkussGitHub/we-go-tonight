@@ -9,7 +9,7 @@ from telegram.ext import (
     MessageHandler
 )
 
-from utils.db_connection import db
+from utils.db.connection import db
 from handlers.wrappers import valid_user, ignore_old_messages
 logger = logging.getLogger(__name__)
 

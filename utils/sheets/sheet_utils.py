@@ -18,14 +18,6 @@ class SheetManager:
         self.client_id = client_id
         self.client_secret = client_secret
 
-    def log_exception(func):
-        def handle_exception(self):
-            try:
-                func(self)
-            except Exception as e:
-                logger.info("Something went wrong:", e)
-        return handle_exception
-
     def _save_event_list(self, events_sheet: list) -> None:
         placeholders = events_sheet[0]
 
@@ -69,15 +61,68 @@ class SheetManager:
         week = datetime.strptime(week_str, "%d/%m/%Y %H:%M")
         month_str = (datetime.now()+timedelta(days=31)).strftime("%d/%m/%Y %H:%M")
         month = datetime.strptime(month_str, "%d/%m/%Y %H:%M")
+
+        pages_by_event_type = {
+            "Concerts/Parties": {
+                "page_used_space": 1,
+                "page": 1
+            },
+            "Culture": {
+                "page_used_space": 1,
+                "page": 1
+            },
+            "Workshop": {
+                "page_used_space": 1,
+                "page": 1
+            },
+            "Food/Drinks": {
+                "page_used_space": 1,
+                "page": 1
+            },
+            "Art/Literature": {
+                "page_used_space": 1,
+                "page": 1
+            },
+            "Theatre/Stand up": {
+                "page_used_space": 1,
+                "page": 1
+            },
+        }
+
+        prev_date = datetime.min
         for event in event_list:
             if not event.get("start_date"):
                 continue
+            event["id"] = str(uuid4())
+            event["start_date"] = event["start_date"].strip()
 
-            else:
+            try:
                 start_date = datetime.strptime(event["start_date"], "%d/%m/%Y %H:%M")
-            
+            except ValueError as e:
+                print(event["event_name"], event["start_date"])
+
+            if start_date < today or start_date > month:
+                continue
+
+            if pages_by_event_type[event["event_type"]]["page_used_space"] >= 8:
+                pages_by_event_type[event["event_type"]]["page"] += 1
+                pages_by_event_type[event["event_type"]]["page_used_space"] = 1
+
+            if start_date.date() > prev_date.date():
+                prev_date = event["start_date"]
+                prev_date = datetime.strptime(prev_date, "%d/%m/%Y %H:%M")
+                pages_by_event_type[event["event_type"]]["page_used_space"] += 1
+            pages_by_event_type[event["event_type"]]["page_used_space"] += 1
+            event["page"] = pages_by_event_type[event["event_type"]]["page"]
+
             if event.get("end_date"):
-                end_date = datetime.strptime(event["end_date"], "%d/%m/%Y %H:%M")
+                event["end_date"] = event["end_date"].strip()
+
+                try:
+                    end_date = datetime.strptime(event["end_date"].strip(), "%d/%m/%Y %H:%M")
+                except ValueError as e:
+                    print(event["event_name"], e.args)
+
                 ongoing_date = start_date
                 while not (end_date.date() == ongoing_date.date()):
                     ev_copy = deepcopy(event)
@@ -105,14 +150,8 @@ class SheetManager:
             if start_date <= month and start_date >= today:
                 result["events"]["month"][event["event_type"]].append(event)
 
-        result_sorted = deepcopy(result)
-
-        for date_key, date_value in result["events"].items():
-            for event_key, event_value in date_value.items():
-                result_sorted["events"][date_key][event_key] = sorted(event_value, key=lambda x: datetime.strptime(x["start_date"], "%d/%m/%Y %H:%M"))
-
         with open('data/event_list.json', 'w') as f:
-            json.dump(result_sorted, f, indent=4)
+            json.dump(result, f, indent=4)
             logger.info("Event list saved to file.")
 
     def _save_places_list(self, place_sheet: list) -> None:
@@ -123,6 +162,45 @@ class SheetManager:
         for place in place_sheet[1:]:
             place_list.append(dict(zip(placeholders, place)))
 
+        pages_by_place_type = {
+            "Bar": {
+                "page_used_space": 1,
+                "page": 1
+            },
+            "Restaurant": {
+                "page_used_space": 1,
+                "page": 1
+            },
+            "Cafe": {
+                "page_used_space": 1,
+                "page": 1
+            },
+            "Club": {
+                "page_used_space": 1,
+                "page": 1
+            },
+            "Fest": {
+                "page_used_space": 1,
+                "page": 1
+            },
+            "Unique": {
+                "page_used_space": 1,
+                "page": 1
+            },
+            "Cinema": {
+                "page_used_space": 1,
+                "page": 1
+            },
+            "Concert venue": {
+                "page_used_space": 1,
+                "page": 1
+            },
+            "Gallery": {
+                "page_used_space": 1,
+                "page": 1
+            },
+        }
+
         result = {
             "last_updated": datetime.now().strftime("%Y/%m/%d %H:%M:%S"),
             "places": {
@@ -132,12 +210,36 @@ class SheetManager:
                 "Club": [],
                 "Fest": [],
                 "Unique": [],
+                "Cinema": [],
+                "Concert venue": [],
+                "Gallery": []
             }
         }
 
         for place in place_list:
+            if len(place) < 5:
+                print(f"PLEASE CHECK {place['place_name']}, A LOT OF FIELDS ARE MISSING")
+                continue
             place_type = place["place_type"]
-            result["places"][place_type].append(place)
+
+            try:
+                result["places"][place_type].append(place)
+            except KeyError as e:
+                place_type = e.args[0]
+                place_name = place["place_name"]
+                if place_type:
+                    print(f"PLACE TYPE FOR {place_name} IS UNKNOWN, PLEASE ASK DEVELOPER TO UPDATE PLACE TYPES")
+                else:
+                    print(f"PLACE TYPE FOR {place_name} CAN'T BE EMPTY")
+            else:
+                if pages_by_place_type[place["place_type"]]["page_used_space"] < 10:
+                    pages_by_place_type[place["place_type"]]["page_used_space"] += 1
+                else:
+                    pages_by_place_type[place["place_type"]]["page_used_space"] = 1
+                    pages_by_place_type[place["place_type"]]["page"] += 1
+                place["page"] = pages_by_place_type[place["place_type"]]["page"]
+
+            
 
         with open('data/place_list.json', 'w') as f:
             json.dump(result, f, indent=4)
@@ -184,7 +286,6 @@ class SheetManager:
     def refresh_token(self, value: str) -> None:
         self._refresh_token = value
 
-    @log_exception
     def get_oauth_link(self) -> None:
         logger.info("Getting oauth link")
         resp = requests.get(
@@ -202,7 +303,7 @@ class SheetManager:
 
         print("Authorize:", resp.url)
 
-    @log_exception
+
     def get_access_token(self) -> None:
         self.get_oauth_link()
         logger.info("Getting access token")
@@ -223,7 +324,7 @@ class SheetManager:
         self.access_token_expiry = datetime.now() + timedelta(seconds=r["expires_in"])
         self.refresh_token = r["refresh_token"]
 
-    @log_exception
+
     def refresh_access_token(self) -> None:
         logger.info("Refreshing access token")
         r = requests.post(
@@ -239,7 +340,35 @@ class SheetManager:
         self.access_token = r["access_token"]
         self.access_token_expiry = datetime.now() + timedelta(seconds=r["expires_in"])
 
-    @log_exception
+
+    def sort_events_sheet(self) -> None:
+        data = {
+            "requests": [{
+            "sortRange": {
+                "range": {
+                "sheetId": "300000580",
+                "startRowIndex": 1,
+                "endRowIndex": 1000000,
+                "startColumnIndex": 0,
+                "endColumnIndex": 14
+                },
+                "sortSpecs": [{
+                "dimensionIndex": 7,
+                "sortOrder": "ASCENDING"
+                }]
+            }
+            }]
+        }
+
+        r = requests.post(
+            url=self.base_url + "1GnS2Soa3llJcxUugvsORYrz0jLkgfZgCKVyJwkn45jc:batchUpdate",
+            headers={
+                "Authorization": f"Bearer {self.access_token}"
+            },
+            json=data
+        )
+
+
     def get_events_sheet(self) -> None:
         if not hasattr(self, "access_token"):
             with open("settings.local.yaml", "r") as f:
@@ -251,6 +380,7 @@ class SheetManager:
             self.refresh_access_token()
 
         logger.info("Getting events sheet")
+        self.sort_events_sheet()
 
         r = requests.get(
             url=self.base_url + "1GnS2Soa3llJcxUugvsORYrz0jLkgfZgCKVyJwkn45jc/values/Events!A1:N",
@@ -261,7 +391,7 @@ class SheetManager:
 
         self._save_event_list(r["values"])
 
-    @log_exception
+
     def get_places_sheet(self) -> None:
         if not hasattr(self, "access_token"):
             with open("settings.local.yaml", "r") as f:
@@ -283,7 +413,7 @@ class SheetManager:
 
         self._save_places_list(r["values"])
  
-    @log_exception
+
     def get_sheets(self) -> None:
         self.get_events_sheet()
         self.get_places_sheet()

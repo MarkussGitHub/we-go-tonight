@@ -50,4 +50,4 @@ translations = {
 }
 
 def translate(text, lang):
-    return text if lang == "en" else translations.get(lang, {}).get(text, "")
+    return text if lang == "en" else translations.get(lang, {}).get(text, text)

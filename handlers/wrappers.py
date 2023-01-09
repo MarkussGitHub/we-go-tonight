@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from telegram import Update
 from telegram.ext import CallbackContext
-from utils.db_connection import db
+from utils.db.connection import db
 
 
 def ignore_old_messages(func):
