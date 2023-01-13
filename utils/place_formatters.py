@@ -12,13 +12,13 @@ def prepare_place_details(raw_place):
     }
 
     KEYS_TO_SKIP = [
+        "place_sub_type",
         "place_type",
         "sub_img_1",
         "sub_img_2",
         "sub_img_3",
         "sub_img_4",
         "main_image",
-        "place_adress_link",
         "phone",
         "email",
         "menu_sub1",
@@ -54,9 +54,18 @@ def prepare_place_details(raw_place):
             continue
         if key == "place_category":
             place += f"{escape_characters(value)}\n"
+        if key == "price_category":
+            if value == " € € €":
+                place += f"*Price:* €€€" 
+                continue
+            if value == " € €":
+                place += f"*Price:* €€" 
+                continue
+            if value == " €":
+                place += f"*Price:* €" 
+                continue
         if key == "place_adress":
             location["name"] = value
-            place += f'{key_name_mapping[key]}: {value}\n'
             continue
         if key == "place_adress_link":
             location["link"] = value
