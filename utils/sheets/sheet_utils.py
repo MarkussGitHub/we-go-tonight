@@ -99,7 +99,7 @@ class SheetManager:
             try:
                 start_date = datetime.strptime(event["start_date"], "%d/%m/%Y %H:%M")
             except ValueError as e:
-                print(event["event_name"], event["start_date"])
+                print(event["event_name"], event["start_date"], e)
 
             if start_date < today or start_date > month:
                 continue

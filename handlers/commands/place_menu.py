@@ -152,7 +152,7 @@ def place_details(update: Update, context: CallbackContext) -> int:
         parse_mode=ParseMode.MARKDOWN,
     )
 
-    return "PLACES"    
+    return "PLACES"
 
 def view_photos(update: Update, context: CallbackContext) -> int:
     message = update.callback_query
