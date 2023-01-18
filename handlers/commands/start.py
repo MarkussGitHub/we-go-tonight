@@ -16,13 +16,14 @@ from utils.db.connection import db
 from utils.translations import translate as _
 from handlers.wrappers import ignore_old_messages, valid_user
 from handlers.commands.event_menu import event_categories, event_selection, event_details
-from handlers.commands.place_menu import place_categories, place_selection, place_details
+from handlers.commands.place_menu import place_categories, place_selection, place_details, view_photos, view_menu, view_drink_menu, contacts
 
 logger = logging.getLogger(__name__)
 
 
 @ignore_old_messages
 @valid_user
+
 def start(update: Update, context: CallbackContext) -> int:
     """Send message on `/start`."""
     user = update.effective_user
@@ -140,7 +141,7 @@ def end(update: Update, context: CallbackContext) -> int:
 
 event_types = "(Concerts/Parties|Culture|Workshop|Food/Drinks|Art/Literature|Theatre/Stand up|"")(-[0-9]+)?$"
 event_type_pattern = "event_type|today|week|month"
-place_types = "(Bar|Restaurant|Cafe)(-[0-9]+)?$"
+place_types = "(Bar|Restaurant|Cafe|Club|Unique|Cinema|(Concert venue)|Gallery)(-[0-9]+)?$"
 
 conv_handler = ConversationHandler(
     entry_points=[CommandHandler("start", start)],
@@ -161,6 +162,10 @@ conv_handler = ConversationHandler(
             CallbackQueryHandler(place_categories, pattern="^places$"),
             CallbackQueryHandler(place_selection, pattern="^" + place_types + "$"),
             CallbackQueryHandler(place_details, pattern="^place_details"),
+            CallbackQueryHandler(view_photos, pattern="^photos"),
+            CallbackQueryHandler(view_menu, pattern="^menu"),       
+            CallbackQueryHandler(view_drink_menu, pattern="^drinks"),   
+            CallbackQueryHandler(contacts, pattern="^contacts"),     
             CallbackQueryHandler(end, pattern="^end$"),
         ],
         "LANGUAGE": [
