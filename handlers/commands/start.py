@@ -16,7 +16,7 @@ from utils.db.connection import db
 from utils.translations import translate as _
 from handlers.wrappers import ignore_old_messages, valid_user
 from handlers.commands.event_menu import event_categories, event_selection, event_details
-from handlers.commands.place_menu import place_categories, place_selection, place_details, view_photos, view_menu, view_drink_menu, contacts
+from handlers.commands.place_menu import place_categories, place_selection, place_details, view_photos, view_menu, view_drink_menu, contacts, event_button
 
 logger = logging.getLogger(__name__)
 
@@ -165,7 +165,8 @@ conv_handler = ConversationHandler(
             CallbackQueryHandler(view_photos, pattern="^photos"),
             CallbackQueryHandler(view_menu, pattern="^menu"),       
             CallbackQueryHandler(view_drink_menu, pattern="^drinks"),   
-            CallbackQueryHandler(contacts, pattern="^contacts"),     
+            CallbackQueryHandler(contacts, pattern="^contacts"),   
+            CallbackQueryHandler(event_button, pattern="^event_button"),   
             CallbackQueryHandler(end, pattern="^end$"),
         ],
         "LANGUAGE": [

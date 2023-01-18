@@ -121,25 +121,27 @@ def place_details(update: Update, context: CallbackContext) -> int:
         [],
         [],
         [
-            InlineKeyboardButton("📸"+_("View Photos", lang)+" 📸", callback_data=f"photos-{selected_place_type}-{place_name}")
+            InlineKeyboardButton("🧧 "+_("Hosted Events", lang), callback_data=f"event_button-{selected_place_type}-{place_name}"),
+            InlineKeyboardButton("📸 "+_("View Photos", lang), callback_data=f"photos-{selected_place_type}-{place_name}"),
         ],
+        [],
         [
             InlineKeyboardButton(_("Back", lang), callback_data=f"{selected_place_type}-{page}"),
         ],
         [
-            InlineKeyboardButton(f"📄{_('Place Menu', lang)} 📄", callback_data="places"),
-            InlineKeyboardButton(f"❌{_('Cancel', lang)} ❌", callback_data="end"),
+            InlineKeyboardButton(f"📄 {_('Place Menu', lang)}", callback_data="places"),
+            InlineKeyboardButton(f"❌ {_('Cancel', lang)}", callback_data="end"),
         ],
     ]
     for place in jzon["places"][selected_place_type]:
         if place["place_name"] == place_name:
             if "drink_menu" in place or "drink_menu_alc" in place:
-                keyboard[1].append(InlineKeyboardButton(text=f"🍹"+_("View Drink Menu", lang)+"🍹", callback_data=f"drinks-{selected_place_type}-{place_name}"))
+                keyboard[1].append(InlineKeyboardButton(text=f"🍹 "+_("View Drink Menu", lang), callback_data=f"drinks-{selected_place_type}-{place_name}"))
             if "menu_sub1" in place or "menu_sub2" in place or "menu_sub3" in place:
-                keyboard[1].append(InlineKeyboardButton(text=f"🍽️"+_("View Food Menu", lang)+" 🍽️", callback_data=f"menu-{selected_place_type}-{place_name}"))
+                keyboard[1].append(InlineKeyboardButton(text=f"🍔 "+_("View Food Menu", lang), callback_data=f"menu-{selected_place_type}-{place_name}"))
             if "email" in place or "phone" in place:
                 if place["email"] != "" or place["phone"] != "":
-                    keyboard[2].append(InlineKeyboardButton(text=f"ℹ️"+_("Contacts", lang)+" ℹ️", callback_data=f"contacts-{selected_place_type}-{place_name}"))  
+                    keyboard[3].append(InlineKeyboardButton(text=f"ℹ️ "+_("Contacts", lang), callback_data=f"contacts-{selected_place_type}-{place_name}"))  
     if location and location.get("link"):
         keyboard[0].append(InlineKeyboardButton(text=f'📍 {location["name"]}', url=location["link"]))
 
@@ -318,3 +320,6 @@ def contacts (update: Update, context: CallbackContext) -> int:
                     parse_mode=ParseMode.MARKDOWN,
                 )                
                 return "PLACES"
+            
+def event_button(update: Update, context: CallbackContext) -> int:
+    print("gay")
