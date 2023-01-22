@@ -163,27 +163,43 @@ class SheetManager:
             place_list.append(dict(zip(placeholders, place)))
 
         pages_by_place_type = {
-            "Bar": {
+            "Bars": {
                 "page_used_space": 1,
                 "page": 1
             },
-            "Restaurant": {
+            "Cafes": {
                 "page_used_space": 1,
                 "page": 1
             },
-            "Cafe": {
+            "Restaurants": {
                 "page_used_space": 1,
                 "page": 1
             },
-            "Club": {
+            "Art spaces": {
                 "page_used_space": 1,
                 "page": 1
             },
-            "Fest": {
+            "Book stores": {
                 "page_used_space": 1,
                 "page": 1
             },
-            "Unique": {
+            "Galleries": {
+                "page_used_space": 1,
+                "page": 1
+            },
+            "Museums": {
+                "page_used_space": 1,
+                "page": 1
+            },
+            "Clubs": {
+                "page_used_space": 1,
+                "page": 1
+            },
+            "Concert halls": {
+                "page_used_space": 1,
+                "page": 1
+            },
+            "Hookah bars": {
                 "page_used_space": 1,
                 "page": 1
             },
@@ -191,11 +207,7 @@ class SheetManager:
                 "page_used_space": 1,
                 "page": 1
             },
-            "Concert venue": {
-                "page_used_space": 1,
-                "page": 1
-            },
-            "Gallery": {
+            "Theatre": {
                 "page_used_space": 1,
                 "page": 1
             },
@@ -204,15 +216,26 @@ class SheetManager:
         result = {
             "last_updated": datetime.now().strftime("%Y/%m/%d %H:%M:%S"),
             "places": {
-                "Bar": [],
-                "Restaurant": [],
-                "Cafe": [],
-                "Club": [],
-                "Fest": [],
-                "Unique": [],
-                "Cinema": [],
-                "Concert venue": [],
-                "Gallery": []
+                "Food & Drinks": {
+                    "Bars": [],
+                    "Cafes": [],
+                    "Restaurants": [],
+                },
+                "Culture Spaces": {
+                    "Art spaces": [],
+                    "Book stores": [],
+                    "Galleries": [],
+                    "Museums": [],
+                },
+                "Entertainment": {
+                    "Clubs": [],
+                    "Concert halls": [],
+                    "Hookah bars": [],
+                },
+                "Cinema & Theater": {
+                    "Cinema": [],
+                    "Theatre": [],
+                }
             }
         }
 
@@ -221,9 +244,10 @@ class SheetManager:
                 print(f"PLEASE CHECK {place['place_name']}, A LOT OF FIELDS ARE MISSING")
                 continue
             place_type = place["place_type"]
+            place_sub_type = place["place_sub_type"]
 
             try:
-                result["places"][place_type].append(place)
+                result["places"][place_type][place_sub_type].append(place)
             except KeyError as e:
                 place_type = e.args[0]
                 place_name = place["place_name"]
@@ -232,12 +256,12 @@ class SheetManager:
                 else:
                     print(f"PLACE TYPE FOR {place_name} CAN'T BE EMPTY")
             else:
-                if pages_by_place_type[place["place_type"]]["page_used_space"] < 10:
-                    pages_by_place_type[place["place_type"]]["page_used_space"] += 1
+                if pages_by_place_type[place["place_sub_type"]]["page_used_space"] < 10:
+                    pages_by_place_type[place["place_sub_type"]]["page_used_space"] += 1
                 else:
-                    pages_by_place_type[place["place_type"]]["page_used_space"] = 1
-                    pages_by_place_type[place["place_type"]]["page"] += 1
-                place["page"] = pages_by_place_type[place["place_type"]]["page"]
+                    pages_by_place_type[place["place_sub_type"]]["page_used_space"] = 1
+                    pages_by_place_type[place["place_sub_type"]]["page"] += 1
+                place["page"] = pages_by_place_type[place["place_sub_type"]]["page"]
 
             
 

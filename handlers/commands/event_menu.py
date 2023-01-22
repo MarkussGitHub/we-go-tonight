@@ -30,6 +30,7 @@ def event_categories(update: Update, context: CallbackContext) -> int:
         [InlineKeyboardButton(f"🍱 {_('Food/Drinks', lang)} 🥂", callback_data="Food/Drinks")],
         [InlineKeyboardButton(f"🎨 {_('Art/Literature', lang)} 📚", callback_data="Art/Literature")],
         [InlineKeyboardButton(f"🎭 {_('Theatre/Stand up', lang)} 🎤", callback_data="Theatre/Stand up")],
+        [InlineKeyboardButton("⬅️ " + _("Back", lang), callback_data=f"events")],
     ]
 
     message.edit_message_text(
@@ -100,7 +101,7 @@ def event_selection(update: Update, context: CallbackContext) -> int:
         "Theatre/Stand up": f"🎭 {_('Theatre/Stand up', lang)} 🎤",
     }
     for event in event_group:
-        if page == 1:
+        if page == 1 and event_group[-1]["page"] >= page+1:
             keyboard.append([InlineKeyboardButton("➡️", callback_data=f"{selected_event_type}-{page+1}")])
             break
 
@@ -150,7 +151,7 @@ def event_details(update: Update, context: CallbackContext) -> int:
     keyboard = [
         [],
         [
-            InlineKeyboardButton(_("Back", lang), callback_data=f"{selected_event_type}-{page}"),
+            InlineKeyboardButton("⬅️ " + _("Back", lang), callback_data=f"{selected_event_type}-{page}"),
         ],
         [
             InlineKeyboardButton(f"📄 {_('Event Menu', lang)}", callback_data="event_type"),

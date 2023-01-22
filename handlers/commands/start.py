@@ -16,7 +16,7 @@ from utils.db.connection import db
 from utils.translations import translate as _
 from handlers.wrappers import ignore_old_messages, valid_user
 from handlers.commands.event_menu import event_categories, event_selection, event_details
-from handlers.commands.place_menu import place_categories, place_selection, place_details, view_photos, view_menu, view_drink_menu, contacts, event_button
+from handlers.commands.place_menu import place_categories, place_sub_categories, place_selection, place_details, view_photos, view_menu, view_drink_menu, contacts, event_button, place_event_details
 
 logger = logging.getLogger(__name__)
 
@@ -49,11 +49,20 @@ def start(update: Update, context: CallbackContext) -> int:
         [InlineKeyboardButton(_("Places", lang), callback_data="places")],
     ]
 
-    context.bot.send_message(
-        chat_id=user.id,
-        text=_("View places or events", lang),
-        reply_markup=InlineKeyboardMarkup(keyboard),
-    )
+
+    if update.callback_query and update.callback_query.data == "start":
+        message = update.callback_query
+        message.answer()
+        message.edit_message_text(
+            text=_("View places or events", lang),
+            reply_markup=InlineKeyboardMarkup(keyboard),
+        )
+    else:
+        context.bot.send_message(
+            chat_id=user.id,
+            text=_("View places or events", lang),
+            reply_markup=InlineKeyboardMarkup(keyboard),
+        )
 
     return "START"
 
@@ -66,6 +75,7 @@ def select_date(update: Update, context: CallbackContext) -> int:
         [InlineKeyboardButton(_("Today", lang), callback_data="today")],
         [InlineKeyboardButton(_("This week", lang), callback_data="week")],
         [InlineKeyboardButton(_("This month", lang), callback_data="month")],
+        [InlineKeyboardButton("⬅️ " + _("Back", lang), callback_data=f"start")],
     ]
 
     # If started over
@@ -122,7 +132,7 @@ def language_selected(update: Update, context: CallbackContext) -> int:
         text=f"You have selected {lang_mapping.get(lang)} as your preferred language, you can always change it using /settings command.",
     )
 
-    return "START"
+    return start(update, context)
 
 def end(update: Update, context: CallbackContext) -> int:
     """
@@ -138,10 +148,11 @@ def end(update: Update, context: CallbackContext) -> int:
         text=_("I hope you will use our services again", lang))
     return ConversationHandler.END
 
-
 event_types = "(Concerts/Parties|Culture|Workshop|Food/Drinks|Art/Literature|Theatre/Stand up|"")(-[0-9]+)?$"
 event_type_pattern = "event_type|today|week|month"
-place_types = "(Bar|Restaurant|Cafe|Club|Unique|Cinema|(Concert venue)|Gallery)(-[0-9]+)?$"
+
+place_types = "((Food & Drinks)|(Culture Spaces)|Entertainment|(Cinema & Theater))"
+place_sub_type_pattern = "((Food & Drinks)|(Culture Spaces)|Entertainment|(Cinema & Theater))-"
 
 conv_handler = ConversationHandler(
     entry_points=[CommandHandler("start", start)],
@@ -152,6 +163,7 @@ conv_handler = ConversationHandler(
             CallbackQueryHandler(place_categories, pattern="^places$"),
         ],
         "EVENTS": [
+            CallbackQueryHandler(start, pattern="^start$"),
             CallbackQueryHandler(select_date, pattern="^events$"),
             CallbackQueryHandler(event_categories, pattern="^" + event_type_pattern + "$"),
             CallbackQueryHandler(event_selection, pattern="^" + event_types + "$"),
@@ -159,10 +171,13 @@ conv_handler = ConversationHandler(
             CallbackQueryHandler(end, pattern="^end$"),
         ],
         "PLACES": [
+            CallbackQueryHandler(start, pattern="^start$"),
             CallbackQueryHandler(place_categories, pattern="^places$"),
-            CallbackQueryHandler(place_selection, pattern="^" + place_types + "$"),
+            CallbackQueryHandler(place_sub_categories, pattern="^" + place_types + "$"),
+            CallbackQueryHandler(place_selection, pattern="^" + place_sub_type_pattern),
             CallbackQueryHandler(place_details, pattern="^place_details"),
             CallbackQueryHandler(view_photos, pattern="^photos"),
+            CallbackQueryHandler(place_event_details, pattern="^p_details"),
             CallbackQueryHandler(view_menu, pattern="^menu"),       
             CallbackQueryHandler(view_drink_menu, pattern="^drinks"),   
             CallbackQueryHandler(contacts, pattern="^contacts"),   
