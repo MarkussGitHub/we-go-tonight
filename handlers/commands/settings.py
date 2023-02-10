@@ -16,6 +16,7 @@ from handlers.wrappers import ignore_old_messages, valid_user
 
 logger = logging.getLogger(__name__)
 
+
 @ignore_old_messages
 @valid_user
 def settings(update: Update, context: CallbackContext) -> int:
