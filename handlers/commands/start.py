@@ -21,8 +21,8 @@ from handlers.commands.place_menu import place_categories, place_sub_categories,
 logger = logging.getLogger(__name__)
 
 
+# @valid_user
 @ignore_old_messages
-@valid_user
 def start(update: Update, context: CallbackContext) -> int:
     """Send message on `/start`."""
     user = update.effective_user

@@ -13,9 +13,8 @@ from utils.db.connection import db
 from handlers.wrappers import valid_user, ignore_old_messages
 logger = logging.getLogger(__name__)
 
-
+# @valid_user
 @ignore_old_messages
-@valid_user
 def pushadvert(update: Update, context: CallbackContext) -> None:
     user = update.message.from_user
     logger.info(f"User {user.id} wrote pushadvert.")

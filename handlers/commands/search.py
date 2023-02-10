@@ -25,8 +25,8 @@ from handlers.wrappers import ignore_old_messages, valid_user
 logger = logging.getLogger(__name__)
 
 
+# @valid_user
 @ignore_old_messages
-@valid_user
 def search_by_name_start(update: Update, context: CallbackContext) -> None:
     """Search by name for user input"""
     if not context.chat_data.get("lang"):

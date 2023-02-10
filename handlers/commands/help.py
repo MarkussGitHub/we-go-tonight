@@ -18,9 +18,8 @@ from handlers.wrappers import ignore_old_messages, valid_user
 
 logger = logging.getLogger(__name__)
 
-
+# @valid_user
 @ignore_old_messages
-@valid_user
 def help_command(update: Update, context: CallbackContext) -> None:
     if not context.chat_data.get("lang"):
         context.chat_data["lang"] = db.get_account(update.effective_user.id).get("lang", "en")
