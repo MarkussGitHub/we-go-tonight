@@ -270,9 +270,9 @@ def view_drink_menu(update: Update, context: CallbackContext) -> int:
     for place in place_group:
         if place["place_name"] == place_name:
             media_group = []
-            if place["drink_menu"] != "":
+            if place.get("drink_menu", "") != "":
                 media_group.append(InputMediaPhoto(place["drink_menu"]))
-            if "drink_menu_alc" in place:
+            if place.get("drink_menu_alc", "") != "":
                 media_group.append(InputMediaPhoto(place["drink_menu_alc"]))
             messages = context.bot.send_media_group(update.effective_chat.id, media_group)
 
