@@ -130,7 +130,7 @@ def place_selection(update: Update, context: CallbackContext) -> int:
         ])
 
     message.edit_message_text(
-        text=selected_place_type,
+        text=_(selected_place_type,lang),
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode=ParseMode.MARKDOWN,
         disable_web_page_preview=True,
@@ -272,7 +272,7 @@ def view_drink_menu(update: Update, context: CallbackContext) -> int:
             media_group = []
             if place["drink_menu"] != "":
                 media_group.append(InputMediaPhoto(place["drink_menu"]))
-            if place["drink_menu_alc"] != "":
+            if "drink_menu_alc" in place:
                 media_group.append(InputMediaPhoto(place["drink_menu_alc"]))
             messages = context.bot.send_media_group(update.effective_chat.id, media_group)
 
