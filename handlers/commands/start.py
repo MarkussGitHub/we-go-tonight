@@ -23,7 +23,6 @@ logger = logging.getLogger(__name__)
 
 @ignore_old_messages
 @valid_user
-
 def start(update: Update, context: CallbackContext) -> int:
     """Send message on `/start`."""
     user = update.effective_user
